@@ -10,7 +10,7 @@
 		android:id="@+id/gemtextAnchor"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:lineSpacingExtra="6sp"
 		android:textAppearance="?textAppearanceBody1"
+		android:lineSpacingMultiplier="1.35"
 		tools:text="www.wikipedia.org" />
 </FrameLayout>
