@@ -7,7 +7,7 @@
 	android:layout_marginStart="@dimen/gemtext_block_start_padding"
 	android:paddingStart="@dimen/gemtext_default_padding"
 	android:paddingEnd="@dimen/gemtext_default_padding"
-	android:lineSpacingExtra="6sp"
+	android:lineSpacingMultiplier="1.35"
 	android:textAppearance="?textAppearanceBody1"
 	android:textIsSelectable="true"
 	android:hyphenationFrequency="normal"

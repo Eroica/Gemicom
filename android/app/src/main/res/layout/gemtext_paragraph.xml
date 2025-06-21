@@ -7,7 +7,7 @@
 	android:paddingStart="@dimen/gemtext_default_padding"
 	android:paddingEnd="@dimen/gemtext_default_padding"
 	android:textAppearance="?textAppearanceBody1"
-	android:lineSpacingExtra="1sp"
+	android:lineSpacingMultiplier="1.1"
 	android:hyphenationFrequency="normal"
 	android:textIsSelectable="true"
 	tools:text="@string/gemini_page_invalid_quote" />
