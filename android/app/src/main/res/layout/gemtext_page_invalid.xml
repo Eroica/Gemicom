@@ -9,7 +9,7 @@
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:textAppearance="?textAppearanceBody1"
-		android:lineSpacingExtra="4sp"
 		android:textStyle="italic"
+		android:lineSpacingMultiplier="1.2"
 		android:text="@string/gemini_page_invalid_quote" />
 </LinearLayout>
