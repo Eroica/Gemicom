@@ -40,21 +40,18 @@
 		<item name="textAppearanceHeadline4">@style/Gemicom.Text.H1</item>
 		<item name="textAppearanceHeadline5">@style/Gemicom.Text.H2</item>
 		<item name="textAppearanceHeadline6">@style/Gemicom.Text.H3</item>
-
 		<item name="textAppearanceButton">@style/Gemicom.Text.Button</item>
+
 		<item name="switchStyle">@style/Widget.App.Switch</item>
 		<item name="appBarLayoutStyle">@style/Widget.AppBar</item>
 		<item name="toolbarStyle">@style/Widget.BottomToolbar</item>
 		<item name="nestedScrollViewStyle">@style/Widget.NestedScrollView</item>
 		<item name="checkboxStyle">@style/Widget.CheckBox</item>
-		<!--		<item name="materialCardViewStyle">@style/Widget.Card</item>-->
 	</style>
 
 	<style name="Widget.NestedScrollView" parent="">
 		<item name="android:scrollbars">vertical</item>
 	</style>
-
-	<style name="Widget.Card" parent="Widget.MaterialComponents.CardView"></style>
 
 	<style name="Widget.CheckBox" parent="Widget.MaterialComponents.CompoundButton.CheckBox">
 		<!-- Fix for CheckBoxes having different default color -->
@@ -123,6 +120,6 @@
 	<style name="Widget.Pre" parent="">
 		<item name="android:textColor">#6E6E6E</item>
 		<item name="android:fontFamily">monospace</item>
-		<item name="android:lineSpacingExtra">2dp</item>
+		<item name="android:lineSpacingMultiplier">1.5</item>
 	</style>
 </resources>

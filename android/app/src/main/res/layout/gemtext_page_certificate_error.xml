@@ -27,7 +27,7 @@
 			android:layout_height="wrap_content"
 			android:layout_marginTop="8dp"
 			android:textAppearance="?textAppearanceBody1"
-			android:lineSpacingExtra="4sp"
+			android:lineSpacingMultiplier="1.2"
 			android:text="@string/gemini_page_certificate_error_explanation_1" />
 
 		<TextView
@@ -35,7 +35,7 @@
 			android:layout_height="wrap_content"
 			android:layout_marginTop="8dp"
 			android:textAppearance="?textAppearanceBody2"
-			android:lineSpacingExtra="4sp"
+			android:lineSpacingMultiplier="1.2"
 			android:text="@string/gemini_page_certificate_error_explanation_2" />
 	</LinearLayout>
 </com.google.android.material.card.MaterialCardView>
