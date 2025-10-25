@@ -166,21 +166,14 @@ class SqlTabs(private val db: IDb) : ITabs {
                     val status = TabStatus.fromInt(it.getInt(2))
                     val location = it.getString(3) ?: ""
                     val createdAt = LocalDateTime.parse(it.getString(4), DATE_FORMAT)
-
                     val tab = when (status) {
-                        TabStatus.VALID -> {
+                        TabStatus.VALID, TabStatus.INVALID -> {
                             val geminiHost = GeminiHost.fromAddress(location)
-                            SqlTab(id, createdAt, db, geminiHost, TabStatus.VALID)
-                        }
-
-                        TabStatus.INVALID -> {
-                            val geminiHost = GeminiHost.fromAddress(location)
-                            SqlTab(id, createdAt, db, geminiHost, TabStatus.INVALID)
+                            SqlTab(id, createdAt, db, geminiHost, status)
                         }
 
                         else -> SqlTab(id, createdAt, db)
                     }
-
                     add(tab)
                 }
             }
