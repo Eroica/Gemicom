@@ -18,6 +18,7 @@ import app.gemicom.controllers.ICancelListener
 import app.gemicom.views.lists.TabsAdapter
 import app.gemicom.views.models.BrowserViewModel
 import kotlinx.coroutines.launch
+import java.time.format.DateTimeFormatter
 
 interface ITabsDialog {
     val adapter: TabsAdapter
@@ -67,7 +68,9 @@ class SimpleItemTouchHelperCallback(private val listener: ITabsDialog) : ItemTou
 class TabsDialogFragment : AppCompatDialogFragment(),
     ITabsDialog,
     ICancelListener {
-    override val adapter = TabsAdapter(this)
+    override val adapter: TabsAdapter by lazy {
+        TabsAdapter(this, requireContext().getString(R.string.tab_created_at_format))
+    }
 
     private val viewModel: BrowserViewModel by viewModels(
         ownerProducer = { requireParentFragment() }
