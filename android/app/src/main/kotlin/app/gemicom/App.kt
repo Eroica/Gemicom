@@ -28,16 +28,12 @@ fun appModule(databaseDir: Path, mediaDir: Path, cacheDir: Path) = DI.Module(nam
     bindSingleton { SqlDocuments(instance()) }
     bindSingleton { SqlTabs(instance()) }
     bindSingleton { SqlCertificates(instance()) }
-
-    bindSingleton { GeminiClient(instance()) }
-    bindSingleton { SqliteCache(SqliteCache.DEFAULT_CACHE_ID, cacheDir, instance()) }
-
-    bindSingleton() { AppSettings(SqlPreferences("AppSettings", instance())) }
+    bindSingleton { AppSettings(SqlPreferences("AppSettings", instance())) }
 }
 
 class App : Application(), DIGlobalAware {
+    private val Db: IDb by instance()
     private val Documents: IDocuments by instance()
-    private val DefaultCache: SqliteCache by instance()
     private val AppSettings: AppSettings by instance()
     private val DefaultContext: IContext by instance()
     private val Writer: CoroutineDispatcher by instance(tag = "WRITER")
@@ -60,7 +56,7 @@ class App : Application(), DIGlobalAware {
 
             /* Maintenance on startup */
             Documents.clear(LocalDateTime.now().minusMonths(1))
-            DefaultCache.purge()
+            SqliteCache.purge(cacheDir, Db)
         }
     }
 }

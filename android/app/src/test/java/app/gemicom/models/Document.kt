@@ -90,7 +90,7 @@ After text"""
             it.setString(2, "documentNew")
         }
 
-        documents.clear(LocalDateTime.now().plusDays(1))
+        SqlDocuments.purge(LocalDateTime.now().plusDays(1), db)
 
         val remainingCount = db.query("""SELECT COUNT(*) FROM document""", {}) {
             it.next()

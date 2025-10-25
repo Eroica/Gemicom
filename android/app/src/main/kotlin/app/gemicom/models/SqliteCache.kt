@@ -8,16 +8,31 @@ import java.nio.file.Path
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.isRegularFile
 
+private val logger = KotlinLogging.logger {}
+
 class SqliteCache(
     private val cacheId: Long,
     val cacheDir: Path,
     private val db: IDb
 ) : AutoCloseable {
     companion object {
-        const val DEFAULT_CACHE_ID = 1000L
-    }
+        /* Deletes all "unknown" files, i.e. those that are found in cacheDir, but not in DB */
+        fun purge(cacheDir: Path, db: IDb) {
+            logger.info { "Cache: Begin cache purge" }
+            val knownFiles = db.query(Sql.Cache_All, {}) {
+                buildList {
+                    while (it.next()) {
+                        add(cacheDir.resolve(it.getString(1)))
+                    }
+                }
+            }
 
-    private val logger = KotlinLogging.logger {}
+            Files.list(cacheDir).filter { it !in knownFiles && it.isRegularFile() }.forEach {
+                it.deleteIfExists()
+                logger.info { "Deleted from cache: $it" }
+            }
+        }
+    }
 
     override fun close() {
         logger.info { "Cache $cacheId: Closing" }
@@ -49,22 +64,5 @@ ${managedFiles.joinToString("\n") { it.toString() }}""" }
             it.setString(3, originalName)
         }
         logger.info { "Cache $cacheId: Added $name ($originalName)" }
-    }
-
-    /* Deletes all "unknown" files, i.e. those that are found in cacheDir, but not in DB */
-    fun purge() {
-        logger.info { "Cache $cacheId: Begin cache purge" }
-        val knownFiles = db.query(Sql.Cache_All, {}) {
-            buildList {
-                while (it.next()) {
-                    add(cacheDir.resolve(it.getString(1)))
-                }
-            }
-        }
-
-        Files.list(cacheDir).filter { it !in knownFiles && it.isRegularFile() }.forEach {
-            it.deleteIfExists()
-            logger.info { "Deleted from cache: $it" }
-        }
     }
 }

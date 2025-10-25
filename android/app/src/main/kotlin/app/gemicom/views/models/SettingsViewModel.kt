@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.gemicom.IDb
 import app.gemicom.models.*
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -11,12 +12,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.kodein.di.conf.DIGlobalAware
 import org.kodein.di.instance
+import java.nio.file.Path
 
 class SettingsViewModel : ViewModel(), DIGlobalAware {
+    private val Db: IDb by instance()
+    private val CacheDir: Path by instance(tag = "CACHE_DIR")
     private val Documents: IDocuments by instance()
     private val Tabs: ITabs by instance()
     private val Certificates: ICertificates by instance()
-    private val DefaultCache: SqliteCache by instance()
     private val AppSettings: AppSettings by instance()
     private val Dispatcher: CoroutineDispatcher by instance()
     private val Writer: CoroutineDispatcher by instance(tag = "WRITER")
@@ -56,7 +59,7 @@ class SettingsViewModel : ViewModel(), DIGlobalAware {
         Documents.clear()
         Tabs.all().forEach { ScopedTab(it).close() }
         Tabs.clear()
-        DefaultCache.purge()
+        SqliteCache.purge(CacheDir, Db)
     }
 
     suspend fun resetPreferences() = withContext(Writer) {
