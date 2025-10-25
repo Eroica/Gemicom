@@ -56,7 +56,7 @@ class SimpleItemTouchHelperCallback(private val listener: ITabsDialog) : ItemTou
     }
 
     override fun onSwiped(viewHolder: ViewHolder, direction: Int) {
-        listener.onTabSwiped(viewHolder.adapterPosition)
+        listener.onTabSwiped(viewHolder.bindingAdapterPosition)
     }
 
     override fun onSelectedChanged(viewHolder: ViewHolder?, actionState: Int) {

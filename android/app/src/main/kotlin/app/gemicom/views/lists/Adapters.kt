@@ -248,6 +248,6 @@ class TabsAdapter(private val listener: ITabsDialog) : ListAdapter<ITab, Binding
         holder.itemView.findViewById<TextView>(android.R.id.text2).apply {
             text = formatter.format(getItem(position).createdAt)
         }
-        holder.itemView.setOnClickListener { listener.onTabSelected(position) }
+        holder.itemView.setOnClickListener { listener.onTabSelected(holder.bindingAdapterPosition) }
     }
 }
