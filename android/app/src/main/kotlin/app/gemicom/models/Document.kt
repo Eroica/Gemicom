@@ -21,9 +21,7 @@ interface IDocuments {
 
 class NoDocument : Exception()
 
-data object InvalidDocument : Exception() {
-    private fun readResolve(): Any = InvalidDocument
-}
+class InvalidDocument : Exception()
 
 data class Document(
     override val url: String = "",

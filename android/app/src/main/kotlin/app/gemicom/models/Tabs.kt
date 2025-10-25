@@ -6,13 +6,9 @@ import app.gemicom.Sql
 import kotlinx.serialization.json.Json
 import java.time.LocalDateTime
 
-data object NoMoreHistory : Exception() {
-    private fun readResolve(): Any = NoMoreHistory
-}
-
-data object NoNextEntry : Exception() {
-    private fun readResolve(): Any = NoNextEntry
-}
+class NoMoreHistory : Exception()
+class NoNextEntry : Exception()
+class TabNotFound(val id: Long) : Exception()
 
 enum class TabStatus(val code: Int) {
     BLANK(0), VALID(1), INVALID(2);
@@ -91,7 +87,7 @@ class SqlTab(
         try {
             return history[currentIndex - 1]
         } catch (_: IndexOutOfBoundsException) {
-            throw NoMoreHistory
+            throw NoMoreHistory()
         }
     }
 
@@ -99,7 +95,7 @@ class SqlTab(
         try {
             return history[currentIndex + 1]
         } catch (_: IndexOutOfBoundsException) {
-            throw NoNextEntry
+            throw NoNextEntry()
         }
     }
 
