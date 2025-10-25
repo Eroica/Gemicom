@@ -16,7 +16,7 @@ enum class TabStatus(val code: Int) {
     companion object {
         private val map = entries.associateBy(TabStatus::code)
 
-        fun fromInt(id: Int) = map[id]
+        fun fromInt(id: Int) = map[id] ?: BLANK
     }
 }
 
