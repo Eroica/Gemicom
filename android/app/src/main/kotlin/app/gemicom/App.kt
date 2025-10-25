@@ -22,7 +22,6 @@ fun appModule(databaseDir: Path, mediaDir: Path, cacheDir: Path) = DI.Module(nam
     bindSingleton { DefaultContext() }
 
     bindSingleton { Db.at(databaseDir) }
-    bindSingleton { SqlDocuments(instance()) }
     bindSingleton { SqlTabs(instance()) }
     bindSingleton { SqlCertificates(instance()) }
     bindSingleton { AppSettings(SqlPreferences("AppSettings", instance())) }
@@ -30,7 +29,6 @@ fun appModule(databaseDir: Path, mediaDir: Path, cacheDir: Path) = DI.Module(nam
 
 class App : Application(), DIGlobalAware {
     private val Db: IDb by instance()
-    private val Documents: IDocuments by instance()
     private val AppSettings: AppSettings by instance()
     private val DefaultContext: IContext by instance()
     private val Dispatcher: CoroutineDispatcher by instance()
@@ -52,7 +50,7 @@ class App : Application(), DIGlobalAware {
             }
 
             /* Maintenance on startup */
-            Documents.clear(LocalDateTime.now().minusMonths(1))
+            SqlDocuments.purge(LocalDateTime.now().minusMonths(1), Db)
             SqliteCache.purge(cacheDir, Db)
         }
     }

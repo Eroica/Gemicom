@@ -13,7 +13,7 @@ const val DB_NAME = "Gemicom.db"
 const val MEDIA_NAME = "Media"
 
 private const val DB_INITIAL_VERSION = 0
-private const val DB_CURRENT_VERSION = 1
+private const val DB_CURRENT_VERSION = 2
 
 fun LocalDateTime.toDatabaseString(): String = format(DATE_FORMAT)
 
@@ -111,6 +111,7 @@ class Db private constructor(uri: String) : IDb {
     init {
         when (connection.getVersion()) {
             DB_INITIAL_VERSION -> initialize()
+            1 -> migrateTo2()
         }
     }
 
@@ -175,6 +176,12 @@ class Db private constructor(uri: String) : IDb {
         update(CERTIFICATE)
         update("""INSERT INTO environment (name, value) VALUES ('AppSettings', '{"home": ""}')""")
         connection.setVersion(DB_CURRENT_VERSION)
+    }
+
+    private fun migrateTo2() {
+        update("""DROP TABLE document""")
+        update(DOCUMENT)
+        connection.setVersion(2)
     }
 }
 

@@ -12,11 +12,12 @@ interface IDocument {
 }
 
 interface IDocuments {
+    val tabId: Long
+
     operator fun get(url: String): IDocument
     operator fun contains(url: String): Boolean
 
     fun new(url: String, content: String): IDocument
-    fun clear(olderThan: LocalDateTime? = null)
 }
 
 class NoDocument : Exception()
@@ -28,10 +29,22 @@ data class Document(
     override val content: String
 ) : IDocument
 
-class SqlDocuments(private val db: IDb) : IDocuments {
+class SqlDocuments(override val tabId: Long, private val db: IDb) : IDocuments {
+    companion object {
+        fun purge(olderThan: LocalDateTime?, db: IDb) {
+            db.update(Sql.Document_DeleteOld) {
+                it.setString(
+                    1,
+                    olderThan?.toDatabaseString() ?: LocalDateTime.now().toDatabaseString()
+                )
+            }
+        }
+    }
+
     override fun get(url: String): IDocument {
         return db.query(Sql.Document_Get, {
-            it.setString(1, url)
+            it.setLong(1, tabId)
+            it.setString(2, url)
         }) {
             if (it.next()) {
                 Document(url, it.getString(1))
@@ -42,29 +55,24 @@ class SqlDocuments(private val db: IDb) : IDocuments {
     }
 
     override fun contains(url: String): Boolean {
-        return db.query(Sql.Document_Has, { it.setString(1, url) }) {
+        return db.query(Sql.Document_Has, {
+            it.setLong(1, tabId)
+            it.setString(2, url)
+        }) {
             it.getLong(1) > 0
         }
     }
 
     override fun new(url: String, content: String): IDocument {
         db.query(Sql.Document_Create, {
-            it.setString(1, url)
-            it.setString(2, content)
+            it.setLong(1, tabId)
+            it.setString(2, url)
+            it.setString(3, content)
         }) {
             it.getLong(1)
         }
 
         return Document(url, content)
-    }
-
-    override fun clear(olderThan: LocalDateTime?) {
-        db.update(Sql.Document_DeleteOld) {
-            it.setString(
-                1,
-                olderThan?.toDatabaseString() ?: LocalDateTime.now().toDatabaseString()
-            )
-        }
     }
 }
 
