@@ -78,7 +78,7 @@ class GeminiImageKeyer : Keyer<GeminiUri> {
     override fun key(
         data: GeminiUri,
         options: Options
-    ): String? {
+    ): String {
         return data.uri
     }
 }

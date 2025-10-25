@@ -6,7 +6,6 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
-import java.nio.file.Paths
 
 internal class GeminiClientTest {
     companion object {

@@ -19,7 +19,7 @@ import javax.net.ssl.*
 import kotlin.io.path.name
 import kotlin.io.path.outputStream
 
-/* 10 MB */
+/* 10 MiB */
 private const val MAX_RESPONSE_SIZE = 10 * 1024 * 1024
 private const val MAX_STATUS_LINE_LENGTH = 1000
 private const val MAX_REQUEST_TIME = 60 * 1000

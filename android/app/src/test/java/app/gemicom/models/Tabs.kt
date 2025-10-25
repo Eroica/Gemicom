@@ -2,7 +2,6 @@ package app.gemicom.models
 
 import app.gemicom.Db
 import app.gemicom.IDb
-import app.gemicom.TESTS_APP_DIR
 import junit.framework.TestCase.assertEquals
 import org.junit.After
 import org.junit.AfterClass
