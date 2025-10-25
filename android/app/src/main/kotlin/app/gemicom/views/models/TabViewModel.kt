@@ -11,12 +11,11 @@ import java.nio.file.Path
 class ScopedTab(private val tab: ITab) : ITab by tab, AutoCloseable, DIGlobalAware {
     private val Db: IDb by instance()
     private val CacheDir: Path by instance(tag = "CACHE_DIR")
-    private val Documents: IDocuments by instance()
     private val Certificates: ICertificates by instance()
 
     val cache: SqliteCache by lazy { SqliteCache(tab.id, CacheDir, Db) }
     val client: CachableGeminiClient by lazy {
-        CachableGeminiClient(cache, Documents, GeminiClient(Certificates))
+        CachableGeminiClient(cache, SqlDocuments(tab.id, Db), GeminiClient(Certificates))
     }
 
     override fun close() {

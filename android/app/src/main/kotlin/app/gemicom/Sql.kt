@@ -10,9 +10,11 @@ CREATE TABLE IF NOT EXISTS environment (
 const val DOCUMENT = """
 CREATE TABLE IF NOT EXISTS document (
     id INTEGER PRIMARY KEY,
+    tab_id INTEGER NOT NULL,
     url TEXT NOT NULL UNIQUE,
     content TEXT NOT NULL,
-    created_at TEXT DEFAULT (datetime('now', 'localtime')) NOT NULL
+    created_at TEXT DEFAULT (datetime('now', 'localtime')) NOT NULL,
+    FOREIGN KEY(tab_id) REFERENCES tab(id) ON DELETE CASCADE
 );
 """
 
@@ -65,9 +67,9 @@ enum class Sql {
 
     companion object {
         operator fun invoke(sql: Sql): String = when (sql) {
-            Document_Create -> """INSERT OR REPLACE INTO document (url, content) VALUES (?, ?) RETURNING id"""
-            Document_Has -> """SELECT COUNT(*) FROM document WHERE url=?"""
-            Document_Get -> """SELECT content FROM document WHERE url=?"""
+            Document_Create -> """INSERT OR REPLACE INTO document (tab_id, url, content) VALUES (?, ?, ?) RETURNING id"""
+            Document_Has -> """SELECT COUNT(*) FROM document WHERE tab_id=? AND url=?"""
+            Document_Get -> """SELECT content FROM document WHERE tab_id=? AND url=?"""
             Document_DeleteOld -> """DELETE FROM document WHERE created_at < ?"""
             Tab_Create -> """INSERT INTO tab DEFAULT VALUES RETURNING id, created_at"""
             Tab_Delete -> """DELETE FROM tab WHERE id=?"""
