@@ -17,7 +17,6 @@ import java.nio.file.Path
 class SettingsViewModel : ViewModel(), DIGlobalAware {
     private val Db: IDb by instance()
     private val CacheDir: Path by instance(tag = "CACHE_DIR")
-    private val Documents: IDocuments by instance()
     private val Tabs: ITabs by instance()
     private val Certificates: ICertificates by instance()
     private val AppSettings: AppSettings by instance()
@@ -56,7 +55,7 @@ class SettingsViewModel : ViewModel(), DIGlobalAware {
     }
 
     suspend fun clearCache() = withContext(Writer) {
-        Documents.clear()
+        SqlDocuments.purge(null, Db)
         Tabs.all().forEach { ScopedTab(it).close() }
         Tabs.clear()
         SqliteCache.purge(CacheDir, Db)

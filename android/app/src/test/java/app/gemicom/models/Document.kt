@@ -20,7 +20,8 @@ internal class DocumentTest {
         @JvmStatic
         fun setUp() {
             db = Db.memory()
-            documents = SqlDocuments(db)
+            db.update("""INSERT INTO tab (id) values (1)""")
+            documents = SqlDocuments(1, db)
         }
 
         @AfterClass

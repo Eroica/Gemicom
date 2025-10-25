@@ -20,7 +20,6 @@ import org.kodein.di.instance
 private fun testAppModule(db: IDb) = DI.Module("App") {
     bindSingleton(tag = "CACHE_DIR") { TESTS_APP_DIR }
     bindSingleton { db }
-    bindSingleton { SqlDocuments(instance()) }
     bindSingleton { SqlCertificates(instance()) }
 }
 
