@@ -22,7 +22,6 @@ class SettingsViewModel : ViewModel(), DIGlobalAware {
     private val Certificates: ICertificates by instance()
     private val AppSettings: AppSettings by instance()
     private val Dispatcher: CoroutineDispatcher by instance()
-    private val Writer: CoroutineDispatcher by instance(tag = "WRITER")
 
     private val _isDarkTheme = MutableLiveData<Boolean>()
     val isDarkTheme: LiveData<Boolean> = _isDarkTheme
@@ -39,30 +38,30 @@ class SettingsViewModel : ViewModel(), DIGlobalAware {
         _isShowInline.postValue(AppSettings.isShowImagesInline)
     }
 
-    suspend fun setDarkTheme(isDark: Boolean) = withContext(Writer) {
+    suspend fun setDarkTheme(isDark: Boolean) = withContext(Dispatcher) {
         AppSettings.isDarkTheme = isDark
     }
 
-    suspend fun setHome(home: String) = withContext(Writer) {
+    suspend fun setHome(home: String) = withContext(Dispatcher) {
         AppSettings.home = home
     }
 
-    suspend fun setShowImagesInline(isShowInline: Boolean) = withContext(Writer) {
+    suspend fun setShowImagesInline(isShowInline: Boolean) = withContext(Dispatcher) {
         AppSettings.isShowImagesInline = isShowInline
     }
 
-    suspend fun clearCertificates() = withContext(Writer) {
+    suspend fun clearCertificates() = withContext(Dispatcher) {
         Certificates.clear()
     }
 
-    suspend fun clearCache() = withContext(Writer) {
+    suspend fun clearCache() = withContext(Dispatcher) {
         Documents.clear()
         Tabs.all().forEach { ScopedTab(it).close() }
         Tabs.clear()
         SqliteCache.purge(CacheDir, Db)
     }
 
-    suspend fun resetPreferences() = withContext(Writer) {
+    suspend fun resetPreferences() = withContext(Dispatcher) {
         AppSettings.clear()
         _home.postValue("")
         _isDarkTheme.postValue(false)

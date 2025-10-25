@@ -16,7 +16,6 @@ class BrowserViewModel : ViewModel(), DIGlobalAware {
     private val Tabs: ITabs by instance()
     private val AppSettings: AppSettings by instance()
     private val Dispatcher: CoroutineDispatcher by instance()
-    private val Writer: CoroutineDispatcher by instance(tag = "WRITER")
 
     private val _tabs = MutableLiveData<List<ScopedTab>>()
     val tabs: LiveData<List<ScopedTab>> = _tabs
@@ -40,14 +39,14 @@ class BrowserViewModel : ViewModel(), DIGlobalAware {
         }
     }
 
-    suspend fun new() = withContext(Writer) {
+    suspend fun new() = withContext(Dispatcher) {
         val tab = Tabs.new()
         val newTabs = _tabs.value.orEmpty().toMutableList()
         newTabs.add(ScopedTab(tab))
         _tabs.postValue(newTabs)
     }
 
-    suspend fun close(position: Int) = withContext(Writer) {
+    suspend fun close(position: Int) = withContext(Dispatcher) {
         val tabs = _tabs.value ?: return@withContext
         val closingTab = tabs[position]
         closingTab.close()
@@ -57,7 +56,7 @@ class BrowserViewModel : ViewModel(), DIGlobalAware {
         _tabs.postValue(updatedTabs)
     }
 
-    suspend fun select(position: Int) = withContext(Writer) {
+    suspend fun select(position: Int) = withContext(Dispatcher) {
         val tabs = _tabs.value ?: return@withContext
         val selectedTab = tabs[position]
 
@@ -70,13 +69,13 @@ class BrowserViewModel : ViewModel(), DIGlobalAware {
         _currentTab.postValue(selectedTab)
     }
 
-    suspend fun restart() = withContext(Writer) {
+    suspend fun restart() = withContext(Dispatcher) {
         val tab = ScopedTab(Tabs.new())
         _tabs.postValue(listOf(tab))
         _currentTab.postValue(tab)
     }
 
-    suspend fun reset() = withContext(Writer) {
+    suspend fun reset() = withContext(Dispatcher) {
         _tabs.value.orEmpty().forEach { it.close() }
         Tabs.clear()
         val tab = ScopedTab(Tabs.new())

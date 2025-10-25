@@ -14,7 +14,6 @@ class BrowserPageViewModel : ViewModel(), DIGlobalAware {
     private val Tabs: ITabs by instance()
     private val Certificates: ICertificates by instance()
     private val Dispatcher: CoroutineDispatcher by instance()
-    private val Writer: CoroutineDispatcher by instance(tag = "WRITER")
 
     private val _tab = MutableLiveData<ScopedTab>()
     val tab: LiveData<ScopedTab> = _tab
@@ -66,7 +65,7 @@ class BrowserPageViewModel : ViewModel(), DIGlobalAware {
         }
     }
 
-    suspend fun back() = withContext(Writer) {
+    suspend fun back() = withContext(Dispatcher) {
         _tab.value?.let {
             try {
                 _document.postValue(it.load(it.back(), true))
@@ -76,7 +75,7 @@ class BrowserPageViewModel : ViewModel(), DIGlobalAware {
         }
     }
 
-    suspend fun forward() = withContext(Writer) {
+    suspend fun forward() = withContext(Dispatcher) {
         _tab.value?.let {
             try {
                 _document.postValue(it.load(it.forward(), true))
@@ -95,7 +94,7 @@ class BrowserPageViewModel : ViewModel(), DIGlobalAware {
 
     suspend fun navigate(
         address: String, pushToHistory: Boolean = true, isCheckCache: Boolean = true
-    ) = withContext(Writer) {
+    ) = withContext(Dispatcher) {
         _tab.value?.let {
             try {
                 _isLoading.postValue(true)
@@ -107,7 +106,7 @@ class BrowserPageViewModel : ViewModel(), DIGlobalAware {
         }
     }
 
-    suspend fun updateCertificate(host: String, hash: String) = withContext(Writer) {
+    suspend fun updateCertificate(host: String, hash: String) = withContext(Dispatcher) {
         Certificates.replace(host, hash)
     }
 }
