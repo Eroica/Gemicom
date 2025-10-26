@@ -58,9 +58,9 @@ fun EditText.textChanges(): Flow<CharSequence?> = callbackFlow {
     awaitClose { removeTextChangedListener(watcher) }
 }
 
-fun ClipboardManager.addListener(): Flow<String> = callbackFlow {
+fun ClipboardManager.addListener(): Flow<Unit> = callbackFlow {
     val listener = ClipboardManager.OnPrimaryClipChangedListener {
-        trySend(content())
+        trySend(Unit)
     }
     addPrimaryClipChangedListener(listener)
     awaitClose { removePrimaryClipChangedListener(listener) }
