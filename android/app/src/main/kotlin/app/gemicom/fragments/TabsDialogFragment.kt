@@ -9,7 +9,6 @@ import android.widget.Button
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
@@ -17,7 +16,7 @@ import app.gemicom.R
 import app.gemicom.controllers.CustomDialog
 import app.gemicom.controllers.ICancelListener
 import app.gemicom.views.lists.TabsAdapter
-import app.gemicom.views.models.TabsDialogViewModel
+import app.gemicom.views.models.BrowserViewModel
 import kotlinx.coroutines.launch
 
 interface ITabsDialog {
@@ -28,8 +27,8 @@ interface ITabsDialog {
 }
 
 interface ITabListener {
-    fun onTabSelected(id: Long)
-    fun onTabClosed(id: Long)
+    fun onTabSelected(position: Int)
+    fun onTabClosed(position: Int)
     fun onNewTab()
     fun onClosedAll()
 }
@@ -68,10 +67,12 @@ class SimpleItemTouchHelperCallback(private val listener: ITabsDialog) : ItemTou
 class TabsDialogFragment : AppCompatDialogFragment(),
     ITabsDialog,
     ICancelListener {
-    private val viewModel: TabsDialogViewModel by viewModels()
-    private var listener: ITabListener? = null
-
     override val adapter = TabsAdapter(this)
+
+    private val viewModel: BrowserViewModel by viewModels(
+        ownerProducer = { requireParentFragment() }
+    )
+    private var listener: ITabListener? = null
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -94,10 +95,7 @@ class TabsDialogFragment : AppCompatDialogFragment(),
         itemTouchHelper.attachToRecyclerView(list)
 
         layout.findViewById<Button>(R.id.buttonNewTab).setOnClickListener {
-            viewModel.viewModelScope.launch {
-                viewModel.new()
-                listener?.onNewTab()
-            }
+            listener?.onNewTab()
         }
 
         dialog.setTitle(getString(R.string.dialog_tabs_title))
@@ -111,6 +109,7 @@ class TabsDialogFragment : AppCompatDialogFragment(),
         super.onStart()
         lifecycleScope.launch {
             viewModel.initialization.join()
+            viewModel.reload()
             viewModel.tabs.observe(this@TabsDialogFragment) {
                 adapter.submitList(it)
             }
@@ -123,26 +122,16 @@ class TabsDialogFragment : AppCompatDialogFragment(),
     }
 
     override fun onCancel() {
-        lifecycleScope.launch {
-            viewModel.closeAll()
-            listener?.onClosedAll()
-            dismiss()
-        }
+        listener?.onClosedAll()
+        dismiss()
     }
 
     override fun onTabSwiped(position: Int) {
-        lifecycleScope.launch {
-            viewModel.tabs.value.orEmpty().getOrNull(position)?.let {
-                viewModel.close(it.id)
-                listener?.onTabClosed(it.id)
-            }
-        }
+        listener?.onTabClosed(position)
     }
 
     override fun onTabSelected(position: Int) {
-        viewModel.tabs.value.orEmpty().getOrNull(position)?.let {
-            listener?.onTabSelected(it.id)
-        }
+        listener?.onTabSelected(position)
         dismiss()
     }
 }

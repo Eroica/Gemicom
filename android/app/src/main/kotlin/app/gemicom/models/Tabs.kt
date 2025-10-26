@@ -4,7 +4,10 @@ import app.gemicom.DATE_FORMAT
 import app.gemicom.IDb
 import app.gemicom.Sql
 import kotlinx.serialization.json.Json
+import java.nio.ByteBuffer
 import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.util.zip.CRC32
 
 class NoMoreHistory : Exception()
 class NoNextEntry : Exception()
@@ -26,6 +29,7 @@ interface ITab {
     val history: List<String>
     val createdAt: LocalDateTime
     var status: TabStatus
+    val uniqueId: Long
 
     fun peekPrevious(): String
     fun peekNext(): String
@@ -78,6 +82,18 @@ class SqlTab(
             }
             field = value
         }
+
+    override val uniqueId = CRC32().let {
+        val epochMillis = createdAt.atZone(ZoneOffset.UTC)
+            .toInstant()
+            .toEpochMilli()
+        val bytes = ByteBuffer.allocate(16)
+            .putLong(id)
+            .putLong(epochMillis)
+            .array()
+        it.update(bytes)
+        it.value and 0xffffffffL
+    }
 
     init {
         /* Tab always starts with index on latest entry. This means that recreating a tab (from DB)
