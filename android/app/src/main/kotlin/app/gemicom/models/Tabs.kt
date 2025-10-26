@@ -45,6 +45,8 @@ interface ITabs {
     fun new(): ITab
     fun delete(tabId: Long)
     fun clear()
+    fun size(): Long
+    fun get(id: Long): ITab
 }
 
 class SqlTab(
@@ -194,5 +196,34 @@ class SqlTabs(private val db: IDb) : ITabs {
 
     override fun clear() {
         db.update(Sql.Tab_Purge)
+    }
+
+    override fun size(): Long {
+        return db.query(Sql.Tab_Count, {}) {
+            it.getLong(1)
+        }
+    }
+
+    override fun get(id: Long): ITab {
+        return db.query(Sql.Tab_Get, {
+            it.setLong(1, id)
+        }) {
+            if (it.next()) {
+                val id = it.getLong(1)
+                val status = TabStatus.fromInt(it.getInt(2))
+                val location = it.getString(3) ?: ""
+                val createdAt = LocalDateTime.parse(it.getString(4), DATE_FORMAT)
+                when (status) {
+                    TabStatus.VALID, TabStatus.INVALID -> {
+                        val geminiHost = GeminiHost.fromAddress(location)
+                        SqlTab(id, createdAt, db, geminiHost, status)
+                    }
+
+                    else -> SqlTab(id, createdAt, db)
+                }
+            } else {
+                throw TabNotFound(id)
+            }
+        }
     }
 }

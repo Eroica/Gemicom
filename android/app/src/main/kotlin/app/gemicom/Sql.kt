@@ -48,7 +48,8 @@ enum class Sql {
     Document_Get,
     Document_DeleteOld,
     Tab_Create, Tab_Delete, Tab_Purge,
-    Tab_All,
+    Tab_Get, Tab_All,
+    Tab_Count,
     Tab_GetHistory, Tab_SetHistory,
     Tab_SetStatus,
     Certificate_Create,
@@ -71,7 +72,9 @@ enum class Sql {
             Tab_Create -> """INSERT INTO tab DEFAULT VALUES RETURNING id, created_at"""
             Tab_Delete -> """DELETE FROM tab WHERE id=?"""
             Tab_Purge -> """DELETE FROM tab"""
+            Tab_Get -> """SELECT id, status, history->>'$[#-1]', created_at FROM tab WHERE id=?"""
             Tab_All -> """SELECT id, status, history->>'$[#-1]', created_at FROM tab"""
+            Tab_Count -> """SELECT COUNT(*) from tab"""
             Tab_GetHistory -> """SELECT json_each.value FROM tab, json_each(tab.history) WHERE tab.id=?"""
             Tab_SetHistory -> """UPDATE tab SET history=? WHERE id=?"""
             Tab_SetStatus -> """UPDATE tab SET status=? WHERE id=?"""
