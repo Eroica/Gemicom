@@ -238,7 +238,9 @@ class TabsAdapter(
         val backgroundValue = TypedValue()
         view.context.theme.resolveAttribute(android.R.attr.selectableItemBackground, backgroundValue, true)
         view.setBackgroundResource(backgroundValue.resourceId)
-        return BindingViewHolder(view)
+        val holder = BindingViewHolder(view)
+        view.setOnClickListener { listener.onTabSelected(holder.bindingAdapterPosition) }
+        return holder
     }
 
     override fun onBindViewHolder(holder: BindingViewHolder, position: Int) {
@@ -248,6 +250,5 @@ class TabsAdapter(
         holder.itemView.findViewById<TextView>(android.R.id.text2).apply {
             text = dateFormatter.format(getItem(position).createdAt)
         }
-        holder.itemView.setOnClickListener { listener.onTabSelected(holder.bindingAdapterPosition) }
     }
 }
