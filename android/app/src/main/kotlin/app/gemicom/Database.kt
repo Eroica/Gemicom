@@ -68,8 +68,6 @@ interface IDb : AutoCloseable {
         return update(Sql(sql), setParams, handle)
     }
 
-    fun batch(sql: Sql, setParams: (PreparedStatement) -> Unit = {})
-
     fun transaction(block: () -> Unit)
     fun <T> transactionWithResult(block: () -> T): T
 }
@@ -122,13 +120,6 @@ class Db private constructor(uri: String) : IDb {
             statement.executeQuery().use { resultSet ->
                 handle(resultSet)
             }
-        }
-    }
-
-    override fun batch(sql: Sql, setParams: (PreparedStatement) -> Unit) {
-        connection.prepareStatement(Sql(sql)).use { statement ->
-            setParams(statement)
-            statement.executeBatch()
         }
     }
 
