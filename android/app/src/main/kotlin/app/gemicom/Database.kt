@@ -17,53 +17,30 @@ private const val DB_CURRENT_VERSION = 2
 
 fun LocalDateTime.toDatabaseString(): String = format(DATE_FORMAT)
 
-data class Arc(val savepoint: Savepoint, var refs: AtomicInteger = AtomicInteger(1))
-
-private val transactionSavepoints = ThreadLocal<Arc?>()
+private val transactionFlag = ThreadLocal<Boolean>()
 
 private fun <R> runTransactionWithResult(connection: Connection, block: (connection: Connection) -> R): R {
-    val priorAutoCommit = connection.autoCommit
-    var needsCommit = false
-    var changeAutocommit = false
-
-    if (transactionSavepoints.get() == null) {
-        needsCommit = true
-        changeAutocommit = true
+    val isOuter = transactionFlag.get() == null
+    if (isOuter) {
         connection.autoCommit = false
-        /* Just to be explicit, create a savepoint at the start of the "work" */
-        transactionSavepoints.set(Arc(connection.setSavepoint("START_OF_TRANSACTION")))
-    } else {
-        transactionSavepoints.get()?.let {
-            it.refs.set(it.refs.get() + 1)
-        }
+        transactionFlag.set(true)
     }
 
     try {
         return block(connection).also {
-            if (needsCommit) {
+            if (isOuter) {
                 connection.commit()
             }
         }
     } catch (e: Exception) {
-        val arc = transactionSavepoints.get()
-        if (arc != null) {
-            connection.rollback(arc.savepoint)
-        } else {
-            /* This shouldn't ever happen because Arc should always be set */
+        if (isOuter) {
             connection.rollback()
         }
         throw e
     } finally {
-        if (transactionSavepoints.get()?.refs?.get() == 1) {
-            if (changeAutocommit) {
-                connection.autoCommit = priorAutoCommit
-            }
-            transactionSavepoints.set(null)
-            transactionSavepoints.remove()
-        } else {
-            transactionSavepoints.get()?.let {
-                it.refs.set(it.refs.get() - 1)
-            }
+        if (isOuter) {
+            transactionFlag.remove()
+            connection.autoCommit = true
         }
     }
 }
