@@ -19,9 +19,6 @@ fun appModule(databaseDir: Path, mediaDir: Path, cacheDir: Path) = DI.Module(nam
     bindSingleton(tag = "MEDIA_DIR") { mediaDir }
     bindSingleton(tag = "CACHE_DIR") { cacheDir }
     bind<CoroutineDispatcher>() with singleton { Dispatchers.IO }
-    bind<CoroutineDispatcher>(tag = "WRITER") with singleton {
-        Dispatchers.IO.limitedParallelism(1)
-    }
     bindSingleton { DefaultContext() }
 
     bindSingleton { Db.at(databaseDir) }
@@ -34,7 +31,7 @@ class App : Application(), DIGlobalAware {
     private val Db: IDb by instance()
     private val AppSettings: AppSettings by instance()
     private val DefaultContext: IContext by instance()
-    private val Writer: CoroutineDispatcher by instance(tag = "WRITER")
+    private val Dispatcher: CoroutineDispatcher by instance()
 
     override fun onCreate() {
         super.onCreate()
@@ -46,7 +43,7 @@ class App : Application(), DIGlobalAware {
         mediaDir.createDirectories()
         DI.global.addImport(appModule(databaseDir, mediaDir, cacheDir))
 
-        DefaultContext.co.launch(Writer) {
+        DefaultContext.co.launch(Dispatcher) {
             if (AppSettings.isDebug) {
                 val root = LoggerFactory.getLogger("ROOT") as Logger
                 root.level = Level.DEBUG

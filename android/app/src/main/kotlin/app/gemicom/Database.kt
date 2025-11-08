@@ -7,6 +7,8 @@ import java.sql.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.withLock
 
 val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 const val DB_NAME = "Gemicom.db"
@@ -49,6 +51,7 @@ interface IDb : AutoCloseable {
     fun <T> query(
         sql: String, setParams: (PreparedStatement) -> Unit = {}, handle: (ResultSet) -> T
     ): T
+
     fun <T> query(
         sql: Sql, setParams: (PreparedStatement) -> Unit = {}, handle: (ResultSet) -> T
     ): T {
@@ -59,9 +62,11 @@ interface IDb : AutoCloseable {
     fun update(sql: Sql, setParams: (PreparedStatement) -> Unit = {}) {
         update(Sql(sql), setParams)
     }
+
     fun <T> update(
         sql: String, setParams: (PreparedStatement) -> Unit = {}, handle: (ResultSet) -> T
     ): T
+
     fun <T> update(
         sql: Sql, setParams: (PreparedStatement) -> Unit = {}, handle: (ResultSet) -> T
     ): T {
@@ -69,7 +74,6 @@ interface IDb : AutoCloseable {
     }
 
     fun transaction(block: () -> Unit)
-    fun <T> transactionWithResult(block: () -> T): T
 }
 
 class Db private constructor(uri: String) : IDb {
@@ -82,6 +86,7 @@ class Db private constructor(uri: String) : IDb {
     private val connection = DriverManager.getConnection(
         "jdbc:sqlite:${uri}?foreign_keys=on&transaction_mode=IMMEDIATE"
     ) as SQLiteConnection
+    private val lock = ReentrantReadWriteLock()
 
     init {
         when (connection.getVersion()) {
@@ -95,18 +100,22 @@ class Db private constructor(uri: String) : IDb {
         setParams: (PreparedStatement) -> Unit,
         handle: (ResultSet) -> T
     ): T {
-        return connection.prepareStatement(sql).use { statement ->
-            setParams(statement)
-            statement.executeQuery().use { resultSet ->
-                handle(resultSet)
+        return lock.readLock().withLock {
+            connection.prepareStatement(sql).use { statement ->
+                setParams(statement)
+                statement.executeQuery().use { resultSet ->
+                    handle(resultSet)
+                }
             }
         }
     }
 
     override fun update(sql: String, setParams: (PreparedStatement) -> Unit) {
-        connection.prepareStatement(sql).use { statement ->
-            setParams(statement)
-            statement.executeUpdate()
+        return lock.writeLock().withLock {
+            connection.prepareStatement(sql).use { statement ->
+                setParams(statement)
+                statement.executeUpdate()
+            }
         }
     }
 
@@ -114,7 +123,7 @@ class Db private constructor(uri: String) : IDb {
         sql: String,
         setParams: (PreparedStatement) -> Unit,
         handle: (ResultSet) -> T
-    ):  T {
+    ): T {
         return connection.prepareStatement(sql).use { statement ->
             setParams(statement)
             statement.executeQuery().use { resultSet ->
@@ -124,11 +133,9 @@ class Db private constructor(uri: String) : IDb {
     }
 
     override fun transaction(block: () -> Unit) {
-        runTransactionWithResult(connection) { block() }
-    }
-
-    override fun <T> transactionWithResult(block: () -> T): T {
-        return runTransactionWithResult(connection) { block() }
+        lock.writeLock().withLock {
+            runTransactionWithResult(connection) { block() }
+        }
     }
 
     override fun close() {

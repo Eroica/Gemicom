@@ -64,7 +64,7 @@ class SqlDocuments(override val tabId: Long, private val db: IDb) : IDocuments {
     }
 
     override fun new(url: String, content: String): IDocument {
-        db.query(Sql.Document_Create, {
+        db.update(Sql.Document_Create, {
             it.setLong(1, tabId)
             it.setString(2, url)
             it.setString(3, content)
