@@ -140,7 +140,7 @@ class BrowserFragment : Fragment(R.layout.fragment_browser), ITabListener, DIGlo
             }
         }
 
-        val clipboard = requireContext().getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+        val clipboard = requireContext().applicationContext.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.addListener()
             .onEach { viewModel.hasClipboardContent.postValue(true) }
             .launchIn(viewLifecycleOwner.lifecycleScope)
