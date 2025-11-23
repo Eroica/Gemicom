@@ -218,7 +218,7 @@ class GeminiAdapter(
 
 class TabDiffCallback : DiffUtil.ItemCallback<ITab>() {
     override fun areItemsTheSame(oldItem: ITab, newItem: ITab): Boolean {
-        return oldItem.id == newItem.id
+        return oldItem.uniqueId == newItem.uniqueId
     }
 
     override fun areContentsTheSame(oldItem: ITab, newItem: ITab): Boolean {
