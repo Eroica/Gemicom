@@ -24,7 +24,6 @@ class BrowserViewModel : ViewModel(), DIGlobalAware {
     val currentTab: LiveData<ScopedTab> = _currentTab
 
     val hasClipboardContent = MutableLiveData(false)
-    val isNoNetwork = MutableLiveData(false)
 
     val initialization: Job = viewModelScope.launch(Dispatcher) {
         val tabs = Tabs.all()

@@ -64,18 +64,6 @@ class BrowserFragment : Fragment(R.layout.fragment_browser), ITabListener, DIGlo
     private val viewRefs = ViewRefs()
     private lateinit var viewPager: () -> ViewPager2
 
-    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
-        override fun onAvailable(network: Network) {
-            super.onAvailable(network)
-            viewModel.isNoNetwork.postValue(false)
-        }
-
-        override fun onLost(network: Network) {
-            super.onLost(network)
-            viewModel.isNoNetwork.postValue(true)
-        }
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewRefs.setRoot(view)
@@ -91,8 +79,6 @@ class BrowserFragment : Fragment(R.layout.fragment_browser), ITabListener, DIGlo
     }
 
     override fun onDestroyView() {
-        (requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager)
-            .unregisterNetworkCallback(networkCallback)
         viewPager().adapter = null
         viewRefs.clear()
         super.onDestroyView()
@@ -144,9 +130,6 @@ class BrowserFragment : Fragment(R.layout.fragment_browser), ITabListener, DIGlo
         clipboard.addListener()
             .onEach { viewModel.hasClipboardContent.postValue(true) }
             .launchIn(viewLifecycleOwner.lifecycleScope)
-
-        (requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager)
-            .registerNetworkCallback(NetworkRequest.Builder().build(), networkCallback)
     }
 
     private fun setupObservers() {

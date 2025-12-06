@@ -437,12 +437,6 @@ class BrowserPageFragment : Fragment(R.layout.fragment_browser_page),
     private suspend fun onNavigate(
         address: String, pushToHistory: Boolean = true, isCheckCache: Boolean = true
     ) {
-        if (browserViewModel.isNoNetwork.value == true) {
-            withContext(Dispatchers.Main) {
-                Toast.makeText(context, getString(R.string.browser_toast_no_network), Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            viewModel.navigate(address, pushToHistory, isCheckCache)
-        }
+        viewModel.navigate(address, pushToHistory, isCheckCache)
     }
 }
