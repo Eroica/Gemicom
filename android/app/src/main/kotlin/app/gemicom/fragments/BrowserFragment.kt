@@ -126,7 +126,9 @@ class BrowserFragment : Fragment(R.layout.fragment_browser), ITabListener, DIGlo
             }
         }
 
-        val clipboard = requireContext().applicationContext.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+        val clipboard = requireContext()
+            .applicationContext
+            .getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.addListener()
             .onEach { viewModel.hasClipboardContent.postValue(true) }
             .launchIn(viewLifecycleOwner.lifecycleScope)
@@ -136,9 +138,11 @@ class BrowserFragment : Fragment(R.layout.fragment_browser), ITabListener, DIGlo
         viewModel.tabs.observe(viewLifecycleOwner) {
             (viewPager().adapter as BrowserPageAdapter).submitList(it)
         }
-        viewModel.currentTab.observe(viewLifecycleOwner) {
-            viewModel.tabs.value?.indexOf(it)?.let {
-                viewPager().setCurrentItem(it, false)
+        /** @since 2025-12-06 Bug fix for state restoration: Tab must be searched for by ID. */
+        viewModel.currentTab.observe(viewLifecycleOwner) { currentTab ->
+            val index = viewModel.tabs.value?.indexOfFirst { it.id == currentTab.id } ?: -1
+            if (index != -1) {
+                viewPager().setCurrentItem(index, false)
             }
         }
     }
