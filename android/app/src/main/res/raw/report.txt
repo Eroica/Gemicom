@@ -21,12 +21,12 @@ Android Arch-Runtime (2.2.0) - The Apache Software License, Version 2.0
 Android Arch-Runtime
 https://developer.android.com/jetpack/androidx/releases/arch-core#2.2.0
 
-Android ConstraintLayout (2.0.1) - The Apache Software License, Version 2.0
+Android ConstraintLayout (2.1.0) - The Apache Software License, Version 2.0
 ConstraintLayout for Android
 http://tools.android.com
 
-Android ConstraintLayout Solver (2.0.1) - The Apache Software License, Version 2.0
-Solver for ConstraintLayout
+Android ConstraintLayout Core (1.0.0) - The Apache Software License, Version 2.0
+ConstraintLayout core
 http://tools.android.com
 
 Android Emoji2 Compat (1.3.0) - The Apache Software License, Version 2.0
@@ -49,10 +49,6 @@ Android Support CardView v7 (1.0.0) - The Apache Software License, Version 2.0
 Android Support CardView v7
 http://developer.android.com/tools/extras/support-library.html
 
-Android Support DynamicAnimation (1.0.0) - The Apache Software License, Version 2.0
-Physics-based animation in support library, where the animations are driven by physics force. You can use this Animation library to create smooth and realistic animations.
-http://developer.android.com/tools/extras/support-library.html
-
 Android Support ExifInterface (1.3.7) - The Apache Software License, Version 2.0
 Android Support ExifInterface
 https://developer.android.com/jetpack/androidx/releases/exifinterface#1.3.7
@@ -61,10 +57,6 @@ Android Support Library Coordinator Layout (1.1.0) - The Apache Software License
 The Support Library is a static library that you can add to your Android application in order to use APIs that are either not available for older platform versions or utility APIs that aren't a part of the framework APIs. Compatible on devices running API 14 or later.
 https://developer.android.com/jetpack/androidx
 
-Android Support Library core utils (1.0.0) - The Apache Software License, Version 2.0
-The Support Library is a static library that you can add to your Android application in order to use APIs that are either not available for older platform versions or utility APIs that aren't a part of the framework APIs. Compatible on devices running API 14 or later.
-http://developer.android.com/tools/extras/support-library.html
-
 Android Support Library Cursor Adapter (1.0.0) - The Apache Software License, Version 2.0
 The Support Library is a static library that you can add to your Android application in order to use APIs that are either not available for older platform versions or utility APIs that aren't a part of the framework APIs. Compatible on devices running API 14 or later.
 http://developer.android.com/tools/extras/support-library.html
@@ -72,10 +64,6 @@ http://developer.android.com/tools/extras/support-library.html
 Android Support Library Custom View (1.1.0) - The Apache Software License, Version 2.0
 The Support Library is a static library that you can add to your Android application in order to use APIs that are either not available for older platform versions or utility APIs that aren't a part of the framework APIs. Compatible on devices running API 14 or later.
 https://developer.android.com/jetpack/androidx
-
-Android Support Library Document File (1.0.0) - The Apache Software License, Version 2.0
-The Support Library is a static library that you can add to your Android application in order to use APIs that are either not available for older platform versions or utility APIs that aren't a part of the framework APIs. Compatible on devices running API 14 or later.
-http://developer.android.com/tools/extras/support-library.html
 
 Android Support Library Drawer Layout (1.1.1) - The Apache Software License, Version 2.0
 The Support Library is a static library that you can add to your Android application in order to use APIs that are either not available for older platform versions or utility APIs that aren't a part of the framework APIs. Compatible on devices running API 14 or later.
@@ -89,21 +77,13 @@ Android Support Library loader (1.0.0) - The Apache Software License, Version 2.
 The Support Library is a static library that you can add to your Android application in order to use APIs that are either not available for older platform versions or utility APIs that aren't a part of the framework APIs. Compatible on devices running API 14 or later.
 http://developer.android.com/tools/extras/support-library.html
 
-Android Support Library Local Broadcast Manager (1.0.0) - The Apache Software License, Version 2.0
-The Support Library is a static library that you can add to your Android application in order to use APIs that are either not available for older platform versions or utility APIs that aren't a part of the framework APIs. Compatible on devices running API 14 or later.
-http://developer.android.com/tools/extras/support-library.html
-
-Android Support Library Print (1.0.0) - The Apache Software License, Version 2.0
-The Support Library is a static library that you can add to your Android application in order to use APIs that are either not available for older platform versions or utility APIs that aren't a part of the framework APIs. Compatible on devices running API 14 or later.
-http://developer.android.com/tools/extras/support-library.html
-
 Android Support Library View Pager (1.0.0) - The Apache Software License, Version 2.0
 The Support Library is a static library that you can add to your Android application in order to use APIs that are either not available for older platform versions or utility APIs that aren't a part of the framework APIs. Compatible on devices running API 14 or later.
 http://developer.android.com/tools/extras/support-library.html
 
-Android Support RecyclerView v7 (1.1.0) - The Apache Software License, Version 2.0
-Android Support RecyclerView v7
-https://developer.android.com/jetpack/androidx
+Android Support RecyclerView (1.2.1) - The Apache Software License, Version 2.0
+Android Support RecyclerView
+https://developer.android.com/jetpack/androidx/releases/recyclerview#1.2.1
 
 Android Support VectorDrawable (1.1.0) - The Apache Software License, Version 2.0
 Android Support VectorDrawable
@@ -137,7 +117,7 @@ Annotation (1.8.1) - The Apache Software License, Version 2.0
 Provides source annotations for tooling and readability.
 https://developer.android.com/jetpack/androidx/releases/annotation#1.8.1
 
-          Apache Commons IO (2.19.0) - Apache-2.0
+          Apache Commons IO (2.21.0) - Apache-2.0
           The Apache Commons IO library contains utility classes, stream implementations, file filters,
 file comparators, endian transformation classes, and much more.
           https://commons.apache.org/proper/commons-io/
@@ -174,13 +154,17 @@ Collections Kotlin Extensions (1.4.2) - The Apache Software License, Version 2.0
 Kotlin extensions for 'collection' artifact
 https://developer.android.com/jetpack/androidx/releases/collection#1.4.2
 
-Core (1.16.0) - The Apache Software License, Version 2.0
+Core (1.17.0) - The Apache Software License, Version 2.0
 Provides backward-compatible implementations of Android platform APIs and features.
-https://developer.android.com/jetpack/androidx/releases/core#1.16.0
+https://developer.android.com/jetpack/androidx/releases/core#1.17.0
 
-Core Kotlin Extensions (1.16.0) - The Apache Software License, Version 2.0
+Core Kotlin Extensions (1.17.0) - The Apache Software License, Version 2.0
 Kotlin extensions for 'core' artifact
-https://developer.android.com/jetpack/androidx/releases/core#1.16.0
+https://developer.android.com/jetpack/androidx/releases/core#1.17.0
+
+DynamicAnimation (1.1.0) - The Apache Software License, Version 2.0
+Physics-based animation in support library, where the animations are driven by physics force. You can use this Animation library to create smooth and realistic animations.
+https://developer.android.com/jetpack/androidx/releases/dynamicanimation#1.1.0
 
 error-prone annotations (2.15.0) - Apache 2.0
 
@@ -188,13 +172,21 @@ Experimental annotation (1.4.1) - The Apache Software License, Version 2.0
 Java annotation for use on unstable Android API surfaces. When used in conjunction with the Experimental annotation lint checks, this annotation provides functional parity with Kotlin's Experimental annotation.
 https://developer.android.com/jetpack/androidx/releases/annotation#1.4.1
 
-fragment (1.8.8) - The Apache Software License, Version 2.0
+fragment (1.8.9) - The Apache Software License, Version 2.0
 The Support Library is a static library that you can add to your Android application in order to use APIs that are either not available for older platform versions or utility APIs that aren't a part of the framework APIs. Compatible on devices running API 14 or later.
-https://developer.android.com/jetpack/androidx/releases/fragment#1.8.8
+https://developer.android.com/jetpack/androidx/releases/fragment#1.8.9
 
-Fragment Kotlin Extensions (1.8.8) - The Apache Software License, Version 2.0
+Fragment Kotlin Extensions (1.8.9) - The Apache Software License, Version 2.0
 Kotlin extensions for 'fragment' artifact
-https://developer.android.com/jetpack/androidx/releases/fragment#1.8.8
+https://developer.android.com/jetpack/androidx/releases/fragment#1.8.9
+
+Graphics Shapes (1.0.1) - The Apache Software License, Version 2.0
+create and render rounded polygonal shapes
+https://developer.android.com/jetpack/androidx/releases/graphics#1.0.1
+
+Graphics Shapes (1.0.1) - The Apache Software License, Version 2.0
+create and render rounded polygonal shapes
+https://developer.android.com/jetpack/androidx/releases/graphics#1.0.1
 
       Guava ListenableFuture only (1.0) - The Apache Software License, Version 2.0
       Contains Guava's com.google.common.util.concurrent.ListenableFuture class,
@@ -223,31 +215,31 @@ JSpecify annotations (1.0.0) - The Apache License, Version 2.0
 An artifact of well-named and well-specified annotations to power static analysis checks
 http://jspecify.org/
 
-Kaverit (2.10.0) - MIT
+Kaverit (2.12.0) - MIT
 Kodein Type System
 http://kodein.org
 
-Kaverit (2.10.0) - MIT
+Kaverit (2.12.0) - MIT
 Kodein Type System
 http://kodein.org
 
-Kodein (7.26.1) - MIT
+Kodein (7.30.0) - MIT
 Kodein Core
 http://kodein.org
 
-Kodein-Framework-Android (7.26.1) - MIT
+Kodein-Framework-Android (7.30.0) - MIT
 Standard Kodein classes & extensions for Android
 http://kodein.org
 
-Kodein-Framework-Android (7.26.1) - MIT
+Kodein-Framework-Android (7.30.0) - MIT
 Kodein extensions with AndroidX compatibility
 http://kodein.org
 
-Kodein-JxInject (7.26.1) - MIT
+Kodein-JxInject (7.30.0) - MIT
 Kodein that can be use with JSR-330: Using reflexivity to auto-inject
 http://kodein.org
 
-Kotlin Stdlib (2.1.20) - The Apache License, Version 2.0
+Kotlin Stdlib (2.2.21) - Apache-2.0
 Kotlin Standard Library
 https://kotlinlang.org/
 
@@ -259,8 +251,8 @@ Kotlin Stdlib Jdk8 (1.8.22) - The Apache License, Version 2.0
 Kotlin Standard Library JDK 8 extension
 https://kotlinlang.org/
 
-kotlin-logging (7.0.7) - The Apache Software License, Version 2.0
-kotlin-logging 7.0.7 - Lightweight logging framework for Kotlin
+kotlin-logging (7.0.13) - The Apache Software License, Version 2.0
+kotlin-logging 7.0.13 - Lightweight logging framework for Kotlin
 https://github.com/oshai/kotlin-logging
 
 kotlinx-coroutines-android (1.10.2) - Apache-2.0
@@ -271,11 +263,11 @@ kotlinx-coroutines-core (1.10.2) - Apache-2.0
 Coroutines support libraries for Kotlin
 https://github.com/Kotlin/kotlinx.coroutines
 
-kotlinx-serialization-core (1.8.1) - Apache-2.0
+kotlinx-serialization-core (1.9.0) - Apache-2.0
 Kotlin multiplatform serialization runtime library
 https://github.com/Kotlin/kotlinx.serialization
 
-kotlinx-serialization-json (1.8.1) - Apache-2.0
+kotlinx-serialization-json (1.9.0) - Apache-2.0
 Kotlin multiplatform serialization runtime library
 https://github.com/Kotlin/kotlinx.serialization
 
@@ -323,8 +315,8 @@ logback-android (3.0.0) - The Apache License, Version 2.0
 Logging library for Android apps
 https://github.com/tony19/logback-android
 
-Material Components for Android (1.12.0) - The Apache Software License, Version 2.0
-Material Components for Android is a static library that you can add to your Android application in order to use APIs that provide implementations of the Material Design specification. Compatible on devices running API 14 or later.
+Material Components for Android (1.13.0) - The Apache Software License, Version 2.0
+Material Components for Android is a static library that you can add to your Android application in order to use APIs that provide implementations of the Material Design specification. Compatible on devices running API 21 or later.
 https://github.com/material-components/material-components-android
 
 okhttp (4.12.0) - The Apache Software License, Version 2.0
@@ -347,7 +339,7 @@ SLF4J API Module (2.0.17) - MIT
 The slf4j API
 http://www.slf4j.org
 
-SQLite JDBC (3.49.1.0) - The Apache Software License, Version 2.0
+SQLite JDBC (3.51.1.0) - The Apache Software License, Version 2.0
 SQLite JDBC library
 https://github.com/xerial/sqlite-jdbc
 
