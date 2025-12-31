@@ -315,7 +315,7 @@ private fun readLimitedText(reader: Reader): String {
         if (total > MAX_RESPONSE_SIZE) {
             throw InvalidGeminiResponse("Response too large (limit: $MAX_RESPONSE_SIZE bytes)")
         }
-        builder.append(buffer, 0, read)
+        builder.appendRange(buffer, 0, read)
     }
 
     return builder.toString()
