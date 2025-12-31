@@ -124,10 +124,12 @@ class Db private constructor(uri: String) : IDb {
         setParams: (PreparedStatement) -> Unit,
         handle: (ResultSet) -> T
     ): T {
-        return connection.prepareStatement(sql).use { statement ->
-            setParams(statement)
-            statement.executeQuery().use { resultSet ->
-                handle(resultSet)
+        return lock.writeLock().withLock {
+            connection.prepareStatement(sql).use { statement ->
+                setParams(statement)
+                statement.executeQuery().use { resultSet ->
+                    handle(resultSet)
+                }
             }
         }
     }
