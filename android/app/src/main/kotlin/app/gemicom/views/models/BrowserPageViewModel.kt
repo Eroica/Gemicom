@@ -28,7 +28,7 @@ class BrowserPageViewModel : ViewModel(), DIGlobalAware {
     val document: LiveData<IGeminiDocument> = _document
 
     suspend fun load(id: Long) = withContext(Dispatcher) {
-        if (_tab.value != null) {
+        if (_tab.value?.id == id) {
             return@withContext
         }
 
