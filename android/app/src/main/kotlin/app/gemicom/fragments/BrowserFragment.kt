@@ -1,17 +1,15 @@
 package app.gemicom.fragments
 
 import android.content.ClipboardManager
-import android.content.Context
 import android.content.Context.CLIPBOARD_SERVICE
-import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkRequest
 import android.os.Bundle
 import android.view.*
+import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import app.gemicom.*
@@ -69,6 +67,10 @@ class BrowserFragment : Fragment(R.layout.fragment_browser), ITabListener, DIGlo
         viewRefs.setRoot(view)
         viewPager = viewRefs.bind(R.id.viewPager)
         viewPager().isUserInputEnabled = false
+        /* Annoying gray highlight by internal RecyclerView catching focus */
+        viewPager().children.filterIsInstance<RecyclerView>().forEach {
+            it.descendantFocusability = ViewGroup.FOCUS_AFTER_DESCENDANTS
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.initialization.join()
