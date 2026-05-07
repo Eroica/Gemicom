@@ -47,7 +47,7 @@ Another required dependency is SQLite. Gemicom does not use Android's built-in S
 The source code is published under the zlib license (see `LICENSE` file in this repository).
 
 ```
-Copyright (C) 2025 Eroica
+Copyright (C) 2025-2026 Eroica
 
 This software is provided 'as-is', without any express or implied
 warranty. In no event will the authors be held liable for any damages
