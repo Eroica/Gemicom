@@ -6,7 +6,6 @@ import java.nio.file.Path
 import java.sql.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.withLock
 
@@ -16,36 +15,9 @@ const val MEDIA_NAME = "Media"
 
 private const val DB_INITIAL_VERSION = 0
 private const val DB_CURRENT_VERSION = 2
+private val transactionDepth = ThreadLocal<Int>().apply { set(0) }
 
 fun LocalDateTime.toDatabaseString(): String = format(DATE_FORMAT)
-
-private val transactionFlag = ThreadLocal<Boolean>()
-
-private fun <R> runTransactionWithResult(connection: Connection, block: (connection: Connection) -> R): R {
-    val isOuter = transactionFlag.get() == null
-    if (isOuter) {
-        connection.autoCommit = false
-        transactionFlag.set(true)
-    }
-
-    try {
-        return block(connection).also {
-            if (isOuter) {
-                connection.commit()
-            }
-        }
-    } catch (e: Exception) {
-        if (isOuter) {
-            connection.rollback()
-        }
-        throw e
-    } finally {
-        if (isOuter) {
-            transactionFlag.remove()
-            connection.autoCommit = true
-        }
-    }
-}
 
 interface IDb : AutoCloseable {
     fun <T> query(
@@ -136,7 +108,31 @@ class Db private constructor(uri: String) : IDb {
 
     override fun transaction(block: () -> Unit) {
         lock.writeLock().withLock {
-            runTransactionWithResult(connection) { block() }
+            val currentDepth = transactionDepth.get() ?: 0
+            val isOuter = currentDepth == 0
+            transactionDepth.set(currentDepth + 1)
+
+            if (isOuter) {
+                connection.autoCommit = false
+            }
+
+            try {
+                block()
+
+                if (isOuter) {
+                    connection.commit()
+                }
+            } catch (e: Exception) {
+                if (isOuter) {
+                    connection.rollback()
+                }
+                throw e
+            } finally {
+                if (isOuter) {
+                    connection.autoCommit = true
+                }
+                transactionDepth.set(currentDepth)
+            }
         }
     }
 
