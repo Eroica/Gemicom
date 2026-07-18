@@ -29,6 +29,15 @@ class BrowserPageAdapter(
         return tabs.size
     }
 
+    override fun getItemId(position: Int): Long {
+        return tabs[position].uniqueId
+    }
+
+    /* Necessary for getItemId */
+    override fun containsItem(itemId: Long): Boolean {
+        return tabs.map { it.uniqueId }.indexOf(itemId) != -1
+    }
+
     override fun createFragment(position: Int): Fragment {
         return BrowserPageFragment.newInstance(tabs[position].id)
     }
