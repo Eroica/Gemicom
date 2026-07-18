@@ -14,7 +14,7 @@ const val DB_NAME = "Gemicom.db"
 const val MEDIA_NAME = "Media"
 
 private const val DB_INITIAL_VERSION = 0
-private const val DB_CURRENT_VERSION = 2
+private const val DB_CURRENT_VERSION = 3
 private val transactionDepth = ThreadLocal<Int>().apply { set(0) }
 
 fun LocalDateTime.toDatabaseString(): String = format(DATE_FORMAT)
@@ -49,6 +49,7 @@ class Db private constructor(uri: String) : IDb {
         when (connection.getVersion()) {
             DB_INITIAL_VERSION -> initialize()
             1 -> migrateTo2()
+            2 -> migrateTo3()
         }
     }
 
@@ -140,6 +141,10 @@ class Db private constructor(uri: String) : IDb {
         update("""DROP TABLE document""")
         update(Sql.DOCUMENT)
         connection.setVersion(2)
+    }
+    private fun migrateTo3() {
+        update("""ALTER TABLE tab ADD COLUMN position INTEGER NOT NULL DEFAULT 0""")
+        connection.setVersion(3)
     }
 }
 
