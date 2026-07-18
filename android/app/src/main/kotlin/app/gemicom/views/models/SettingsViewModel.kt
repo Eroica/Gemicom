@@ -1,13 +1,13 @@
 package app.gemicom.views.models
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.gemicom.IDb
 import app.gemicom.models.*
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.kodein.di.conf.DIGlobalAware
@@ -22,19 +22,19 @@ class SettingsViewModel : ViewModel(), DIGlobalAware {
     private val AppSettings: AppSettings by instance()
     private val Dispatcher: CoroutineDispatcher by instance()
 
-    private val _isDarkTheme = MutableLiveData<Boolean>()
-    val isDarkTheme: LiveData<Boolean> = _isDarkTheme
+    val isDarkTheme: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
-    private val _home = MutableLiveData<String>()
-    val home: LiveData<String> = _home
+    val home: StateFlow<String>
+        field = MutableStateFlow("")
 
-    private val _isShowInline = MutableLiveData<Boolean>()
-    val isShowInline: LiveData<Boolean> = _isShowInline
+    val isShowInline: StateFlow<Boolean>
+        field = MutableStateFlow(true)
 
     val initialization: Job = viewModelScope.launch(Dispatcher) {
-        _isDarkTheme.postValue(AppSettings.isDarkTheme)
-        _home.postValue(AppSettings.home)
-        _isShowInline.postValue(AppSettings.isShowImagesInline)
+        isDarkTheme.value = AppSettings.isDarkTheme
+        home.value = AppSettings.home
+        isShowInline.value = AppSettings.isShowImagesInline
     }
 
     suspend fun setDarkTheme(isDark: Boolean) = withContext(Dispatcher) {
@@ -62,8 +62,8 @@ class SettingsViewModel : ViewModel(), DIGlobalAware {
 
     suspend fun resetPreferences() = withContext(Dispatcher) {
         AppSettings.clear()
-        _home.postValue("")
-        _isDarkTheme.postValue(false)
-        _isShowInline.postValue(false)
+        home.value = ""
+        isDarkTheme.value = false
+        isShowInline.value = false
     }
 }

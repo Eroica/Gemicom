@@ -10,7 +10,9 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import app.gemicom.R
 import app.gemicom.platform.ViewRefs
 import app.gemicom.platform.onClickLaunch
@@ -77,19 +79,29 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     }
 
     private fun setupObservers() {
-        viewModel.isDarkTheme.observe(viewLifecycleOwner) { isDarkTheme ->
-            if (darkThemeSwitch().isChecked != isDarkTheme) {
-                darkThemeSwitch().isChecked = isDarkTheme
-            }
-        }
-        viewModel.home.observe(viewLifecycleOwner) {
-            if (it != homeField().text.toString()) {
-                homeField().setText(it)
-            }
-        }
-        viewModel.isShowInline.observe(viewLifecycleOwner) { isShowInline ->
-            if (showImagesSwitch().isChecked != isShowInline) {
-                showImagesSwitch().isChecked = isShowInline
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.isDarkTheme.collect { isDarkTheme ->
+                        if (darkThemeSwitch().isChecked != isDarkTheme) {
+                            darkThemeSwitch().isChecked = isDarkTheme
+                        }
+                    }
+                }
+                launch {
+                    viewModel.home.collect {
+                        if (it != homeField().text.toString()) {
+                            homeField().setText(it)
+                        }
+                    }
+                }
+                launch {
+                    viewModel.isShowInline.collect { isShowInline ->
+                        if (showImagesSwitch().isChecked != isShowInline) {
+                            showImagesSwitch().isChecked = isShowInline
+                        }
+                    }
+                }
             }
         }
     }
