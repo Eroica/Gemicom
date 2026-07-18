@@ -17,8 +17,8 @@ import app.gemicom.controllers.CustomDialog
 import app.gemicom.controllers.ICancelListener
 import app.gemicom.views.lists.TabsAdapter
 import app.gemicom.views.models.BrowserViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import java.time.format.DateTimeFormatter
 
 interface ITabsDialog {
     val adapter: TabsAdapter
@@ -77,6 +77,8 @@ class TabsDialogFragment : AppCompatDialogFragment(),
     )
     private var listener: ITabListener? = null
 
+    private var co: Job? = null
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
         listener = parentFragment as ITabListener
@@ -110,13 +112,17 @@ class TabsDialogFragment : AppCompatDialogFragment(),
 
     override fun onStart() {
         super.onStart()
-        lifecycleScope.launch {
-            viewModel.initialization.join()
-            viewModel.reload()
-            viewModel.tabs.observe(this@TabsDialogFragment) {
+        co = lifecycleScope.launch {
+            viewModel.tabs.collect {
                 adapter.submitList(it)
             }
         }
+    }
+
+    override fun onStop() {
+        co?.cancel()
+        co = null
+        super.onStop()
     }
 
     override fun onDetach() {
