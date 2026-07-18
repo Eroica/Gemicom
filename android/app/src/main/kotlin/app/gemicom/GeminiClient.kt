@@ -1,6 +1,5 @@
 package app.gemicom
 
-import android.annotation.SuppressLint
 import app.gemicom.models.*
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.commons.io.FilenameUtils
@@ -56,10 +55,14 @@ class TofuTrustManager(
     private val certificates: ICertificates
 ) : X509TrustManager {
     override fun checkServerTrusted(chain: Array<out X509Certificate>, authType: String) {
-        val certificate = chain.first()
-        certificate.checkValidity()
+        if (chain.isEmpty()) {
+            throw UnsupportedOperationException("Empty certificate chain!")
+        }
 
-        val hash = sha256(certificate)
+        val leaf = chain[0]
+        leaf.checkValidity()
+        val hash = sha256(leaf)
+
         try {
             if (certificates[host].first != hash) {
                 throw CertificateMismatchError(host, hash)
@@ -69,8 +72,8 @@ class TofuTrustManager(
         }
     }
 
-    @SuppressLint("TrustAllX509TrustManager")
     override fun checkClientTrusted(chain: Array<out X509Certificate>, authType: String) {
+        throw UnsupportedOperationException("Client certificate validation is not supported by this TrustManager!")
     }
 
     override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
