@@ -27,6 +27,7 @@ interface ITab {
     val id: Long
     val currentLocation: String
     val history: List<String>
+    var position: Int
     val createdAt: LocalDateTime
     var status: TabStatus
     val uniqueId: Long
@@ -56,13 +57,10 @@ class SqlTab(
     override val id: Long,
     override val createdAt: LocalDateTime,
     private val db: IDb,
-    private var geminiHost: GeminiHost? = null,
-    status: TabStatus = TabStatus.BLANK
+    status: TabStatus
 ) : ITab {
-    private var currentIndex = 0
-
     override val currentLocation: String
-        get() = geminiHost?.location ?: ""
+        get() = history.getOrNull(position) ?: ""
 
     override val history: List<String>
         get() = db.query(Sql.Tab_GetHistory, { it.setLong(1, id) }) {
@@ -71,6 +69,21 @@ class SqlTab(
                     add(it.getString(1))
                 }
             }
+        }
+
+    override var position: Int = db.query(Sql.Tab_GetPosition, { it.setLong(1, id) }) {
+        if (it.next()) {
+            it.getInt(1)
+        } else {
+            0
+        }
+    }
+        set(value) {
+            db.update(Sql.Tab_SetPosition) {
+                it.setInt(1, value)
+                it.setLong(2, id)
+            }
+            field = value
         }
 
     override var status = status
@@ -94,15 +107,11 @@ class SqlTab(
         it.value and 0xffffffffL
     }
 
-    init {
-        /* Tab always starts with index on latest entry. This means that recreating a tab (from DB)
-           actually "forwards" tabs to their latest entry. */
-        currentIndex = history.size - 1
-    }
+    private var geminiHost = history.getOrNull(position)?.let { GeminiHost.fromAddress(it) }
 
     override fun peekPrevious(): String {
         try {
-            return history[currentIndex - 1]
+            return history[position - 1]
         } catch (_: IndexOutOfBoundsException) {
             throw NoMoreHistory()
         }
@@ -110,7 +119,7 @@ class SqlTab(
 
     override fun peekNext(): String {
         try {
-            return history[currentIndex + 1]
+            return history[position + 1]
         } catch (_: IndexOutOfBoundsException) {
             throw NoNextEntry()
         }
@@ -118,45 +127,49 @@ class SqlTab(
 
     override fun back(): String {
         peekPrevious()
-        return navigate(history[--currentIndex], false)
+        return navigate(history[--position], false)
     }
 
     override fun forward(): String {
         peekNext()
-        return navigate(history[++currentIndex], false)
+        return navigate(history[++position], false)
     }
 
-    override fun canGoBack() = currentIndex > 0
+    override fun canGoBack() = position > 0
 
-    override fun canGoForward() = currentIndex < history.size - 1
+    override fun canGoForward() = position < history.size - 1
 
     override fun resolve(reference: String): String {
         return geminiHost?.resolve(reference) ?: ""
     }
 
     override fun navigate(address: String, pushToHistory: Boolean): String {
-        try {
-            val locationBeforeNavigate = currentLocation
-            geminiHost!!.navigate(address)
-
-            if (pushToHistory && locationBeforeNavigate != currentLocation) {
-                addToHistory(currentLocation)
+        if (geminiHost == null) {
+            val newHost = GeminiHost.fromAddress(address)
+            db.update(Sql.Tab_SetHistory) {
+                val entries = Json.encodeToString(listOf(newHost.location))
+                it.setString(1, entries)
+                it.setLong(2, id)
             }
-
-            return currentLocation
-        } catch (_: NullPointerException) {
-            geminiHost = GeminiHost.fromAddress(address)
-            addToHistory(currentLocation)
-
-            return currentLocation
+            geminiHost = newHost
+            return newHost.location
         }
+
+        val locationBeforeNavigate = currentLocation
+        val nextLocation = geminiHost!!.navigate(address)
+
+        if (pushToHistory && locationBeforeNavigate != nextLocation) {
+            addToHistory(nextLocation)
+        }
+
+        return nextLocation
     }
 
     private fun addToHistory(address: String) {
         /* If history is not at last location, drop everything behind it */
         var updatedHistory = history.toMutableList()
-        if (currentIndex != updatedHistory.size - 1) {
-            updatedHistory = updatedHistory.dropLast(updatedHistory.size - currentIndex - 1)
+        if (position != updatedHistory.size - 1) {
+            updatedHistory = updatedHistory.dropLast((updatedHistory.size - position - 1).coerceAtLeast(0))
                 .toMutableList()
         }
 
@@ -166,7 +179,7 @@ class SqlTab(
             it.setString(1, entries)
             it.setLong(2, id)
         }
-        currentIndex++
+        position++
     }
 }
 
@@ -177,16 +190,8 @@ class SqlTabs(private val db: IDb) : ITabs {
                 while (it.next()) {
                     val id = it.getLong(1)
                     val status = TabStatus.fromInt(it.getInt(2))
-                    val location = it.getString(3) ?: ""
                     val createdAt = LocalDateTime.parse(it.getString(4), DATE_FORMAT)
-                    val tab = when (status) {
-                        TabStatus.VALID, TabStatus.INVALID -> {
-                            val geminiHost = GeminiHost.fromAddress(location)
-                            SqlTab(id, createdAt, db, geminiHost, status)
-                        }
-
-                        else -> SqlTab(id, createdAt, db)
-                    }
+                    val tab = SqlTab(id, createdAt, db, status)
                     add(tab)
                 }
             }
@@ -198,7 +203,7 @@ class SqlTabs(private val db: IDb) : ITabs {
             it.getLong(1) to LocalDateTime.parse(it.getString(2), DATE_FORMAT)
         }
 
-        return SqlTab(tabId, createdAt, db)
+        return SqlTab(tabId, createdAt, db, TabStatus.BLANK)
     }
 
     override fun delete(tabId: Long) {
@@ -222,16 +227,8 @@ class SqlTabs(private val db: IDb) : ITabs {
             if (it.next()) {
                 val id = it.getLong(1)
                 val status = TabStatus.fromInt(it.getInt(2))
-                val location = it.getString(3) ?: ""
                 val createdAt = LocalDateTime.parse(it.getString(4), DATE_FORMAT)
-                when (status) {
-                    TabStatus.VALID, TabStatus.INVALID -> {
-                        val geminiHost = GeminiHost.fromAddress(location)
-                        SqlTab(id, createdAt, db, geminiHost, status)
-                    }
-
-                    else -> SqlTab(id, createdAt, db)
-                }
+                SqlTab(id, createdAt, db, status)
             } else {
                 throw TabNotFound(id)
             }

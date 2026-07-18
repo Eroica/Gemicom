@@ -4,7 +4,6 @@ import app.gemicom.Db
 import app.gemicom.IDb
 import app.gemicom.TESTS_APP_DIR
 import app.gemicom.models.SqlCertificates
-import app.gemicom.models.SqlDocuments
 import app.gemicom.models.SqlTabs
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.test.runTest
