@@ -3,8 +3,8 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    id("com.jaredsburrows.license") version "0.9.8"
-    id("com.github.ben-manes.versions") version "0.53.0"
+    id("com.jaredsburrows.license") version "0.9.9"
+    id("com.github.ben-manes.versions") version "0.54.0"
 }
 
 android {
@@ -17,7 +17,6 @@ android {
         targetSdk = 34
         versionCode = 10
         versionName = "v2026.05"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     externalNativeBuild {
