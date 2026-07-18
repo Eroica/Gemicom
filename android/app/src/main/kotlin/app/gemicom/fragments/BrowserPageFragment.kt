@@ -10,50 +10,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.ProgressBar
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.transition.ChangeBounds
 import androidx.transition.TransitionManager
-import app.gemicom.CertificateDateError
-import app.gemicom.CertificateMismatchError
-import app.gemicom.GeminiClient
-import app.gemicom.INavigation
-import app.gemicom.InputRequired
-import app.gemicom.InvalidGeminiResponse
-import app.gemicom.InvalidGeminiUri
-import app.gemicom.NoResponseError
-import app.gemicom.R
-import app.gemicom.RequestRefusedError
-import app.gemicom.SensitiveInputRequired
-import app.gemicom.TooManyRedirects
-import app.gemicom.models.Anchor
-import app.gemicom.models.AppSettings
-import app.gemicom.models.CertificateInvalidDocument
-import app.gemicom.models.EmptyGeminiDocument
-import app.gemicom.models.ICertificates
-import app.gemicom.models.Image
-import app.gemicom.models.InvalidDocument
-import app.gemicom.models.InvalidGeminiDocument
-import app.gemicom.models.InvalidHostError
-import app.gemicom.models.NoMoreHistory
-import app.gemicom.models.SecurityIssueGeminiDocument
-import app.gemicom.models.SqliteCache
-import app.gemicom.models.TabStatus
-import app.gemicom.platform.GeminiImageFetcher
-import app.gemicom.platform.GeminiImageKeyer
-import app.gemicom.platform.GeminiUri
-import app.gemicom.platform.IImagePool
-import app.gemicom.platform.ViewRefs
-import app.gemicom.platform.content
-import app.gemicom.platform.loadOrToast
+import app.gemicom.*
+import app.gemicom.models.*
+import app.gemicom.platform.*
 import app.gemicom.ui.FluentInterpolator
 import app.gemicom.views.GeminiView
 import app.gemicom.views.IViewInteraction
@@ -64,17 +32,10 @@ import app.gemicom.views.models.BrowserViewModel
 import coil.ImageLoader
 import coil.load
 import com.google.android.material.appbar.MaterialToolbar
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.plus
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import org.kodein.di.conf.DIGlobalAware
 import org.kodein.di.instance
-import kotlin.getValue
+import kotlin.time.Duration.Companion.seconds
 
 class BrowserPageFragment : Fragment(R.layout.fragment_browser_page),
     TabsButton.IClickTabs,
@@ -173,7 +134,7 @@ class BrowserPageFragment : Fragment(R.layout.fragment_browser_page),
                     if (backPressedCallback.isEnabled) {
                         backPressedCallback.isEnabled = false
                         Toast.makeText(context, getString(R.string.browser_exit_press), Toast.LENGTH_SHORT).show()
-                        delay(1000)
+                        delay(1.seconds)
                         backPressedCallback.isEnabled = true
                     }
                 }
@@ -224,16 +185,20 @@ class BrowserPageFragment : Fragment(R.layout.fragment_browser_page),
         homeButton = viewRefs.bind(R.id.bottomHomeButton)
         pasteButton = viewRefs.bind(R.id.bottomPasteButton)
 
-        setupMenu()
         setupBackpress()
         setupListeners()
         setupActionListeners()
-        setupObservers()
         setupAddressBarTransition()
 
         co = viewLifecycleOwner.lifecycleScope + exceptionHandler
         co.launch {
-            viewModel.load(requireArguments().getLong(ARG_TAB_ID))
+            if (!viewModel.isInitialized) {
+                viewModel.load(browserViewModel.currentTab.value!!)
+            }
+            setupObservers()
+            withContext(Dispatchers.Main) {
+                setupMenu()
+            }
         }
     }
 
@@ -270,23 +235,21 @@ class BrowserPageFragment : Fragment(R.layout.fragment_browser_page),
     }
 
     override fun onAnchorClicked(anchor: Anchor) {
-        if (viewModel.isLoading.value == true) {
+        if (viewModel.isLoading.value) {
             return
         }
         co.launch { onNavigate(anchor.url, pushToHistory = true, isCheckCache = false) }
     }
 
     override fun onImageClicked(image: Image, imageView: ImageView) {
-        viewModel.tab.value?.let {
-            try {
-                imageView.loadOrToast(
-                    GeminiUri.fromAddress(it.resolve(image.url)), imageLoader,
-                    requireContext(),
-                    getString(R.string.browser_load_image_error)
-                )
-            } catch (_: InvalidGeminiUri) {
-                imageView.load(image.url)
-            }
+        try {
+            imageView.loadOrToast(
+                GeminiUri.fromAddress(viewModel.tab.resolve(image.url)), imageLoader,
+                requireContext(),
+                getString(R.string.browser_load_image_error)
+            )
+        } catch (_: InvalidGeminiUri) {
+            imageView.load(image.url)
         }
     }
 
@@ -297,14 +260,12 @@ class BrowserPageFragment : Fragment(R.layout.fragment_browser_page),
     override fun onContinue(host: String, hash: String) {
         co.launch {
             viewModel.updateCertificate(host, hash)
-            viewModel.tab.value?.let {
-                onNavigate(it.currentLocation, pushToHistory = false, isCheckCache = false)
-            }
+            onNavigate(viewModel.tab.currentLocation, pushToHistory = false, isCheckCache = false)
         }
     }
 
     override fun getCache(): SqliteCache {
-        return viewModel.tab.value!!.cache
+        return viewModel.tab.cache
     }
 
     private fun setupMenu() {
@@ -316,9 +277,7 @@ class BrowserPageFragment : Fragment(R.layout.fragment_browser_page),
                 R.id.browser_back -> co.launch { viewModel.back() }
                 R.id.browser_forward -> co.launch { viewModel.forward() }
                 R.id.browser_refresh -> co.launch {
-                    viewModel.tab.value?.let {
-                        onNavigate(it.currentLocation, pushToHistory = false, isCheckCache = false)
-                    }
+                    onNavigate(viewModel.tab.currentLocation, pushToHistory = false, isCheckCache = false)
                 }
 
                 R.id.about -> navigation?.onAboutClick()
@@ -335,14 +294,14 @@ class BrowserPageFragment : Fragment(R.layout.fragment_browser_page),
         val forwardItem = menu.findItem(R.id.browser_forward)
         val refreshItem = menu.findItem(R.id.browser_refresh)
 
-        viewModel.currentUrl.observe(viewLifecycleOwner) {
-            backItem.isEnabled = viewModel.tab.value?.canGoBack() ?: false
-        }
-        viewModel.currentUrl.observe(viewLifecycleOwner) {
-            forwardItem.isEnabled = viewModel.tab.value?.canGoForward() ?: false
-        }
-        viewModel.currentUrl.observe(viewLifecycleOwner) {
-            refreshItem.isEnabled = viewModel.tab.value?.status != TabStatus.BLANK
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.currentUrl.collect {
+                    backItem.isEnabled = viewModel.tab.canGoBack()
+                    forwardItem.isEnabled = viewModel.tab.canGoForward()
+                    refreshItem.isEnabled = viewModel.tab.status != TabStatus.BLANK
+                }
+            }
         }
     }
 
@@ -387,23 +346,37 @@ class BrowserPageFragment : Fragment(R.layout.fragment_browser_page),
     }
 
     private fun setupObservers() {
-        viewModel.document.observe(viewLifecycleOwner) {
-            geminiView().show(it)
-        }
-        browserViewModel.tabs.observe(viewLifecycleOwner) {
-            tabsButton().setCount(it?.size ?: 0)
-        }
-        browserViewModel.hasClipboardContent.observe(viewLifecycleOwner) {
-            pasteButton().isEnabled = it
-        }
-        viewModel.currentUrl.observe(viewLifecycleOwner) {
-            addressBar().setText(it)
-        }
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            progressBar().visibility = if (isLoading) {
-                View.VISIBLE
-            } else {
-                View.GONE
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.document.collect {
+                        geminiView().show(it)
+                    }
+                }
+                launch {
+                    browserViewModel.tabs.collect {
+                        tabsButton().setCount(it.size)
+                    }
+                }
+                launch {
+                    browserViewModel.hasClipboardContent.collect {
+                        pasteButton().isEnabled = it
+                    }
+                }
+                launch {
+                    viewModel.currentUrl.collect {
+                        addressBar().setText(it)
+                    }
+                }
+                launch {
+                    viewModel.isLoading.collect { isLoading ->
+                        progressBar().visibility = if (isLoading) {
+                            View.VISIBLE
+                        } else {
+                            View.GONE
+                        }
+                    }
+                }
             }
         }
     }

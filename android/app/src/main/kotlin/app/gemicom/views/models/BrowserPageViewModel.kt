@@ -1,108 +1,91 @@
 package app.gemicom.views.models
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import app.gemicom.models.*
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 import org.kodein.di.conf.DIGlobalAware
 import org.kodein.di.instance
 
 class BrowserPageViewModel : ViewModel(), DIGlobalAware {
-    private val Tabs: ITabs by instance()
     private val Certificates: ICertificates by instance()
     private val Dispatcher: CoroutineDispatcher by instance()
 
-    private val _tab = MutableLiveData<ScopedTab>()
-    val tab: LiveData<ScopedTab> = _tab
+    lateinit var tab: ScopedTab
+    var isInitialized = false
 
-    private val _isLoading = MutableLiveData(false)
-    val isLoading: LiveData<Boolean> = _isLoading
+    val isLoading: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
-    private val _currentUrl = MutableLiveData("")
-    val currentUrl: LiveData<String> = _currentUrl
+    val currentUrl: StateFlow<String>
+        field = MutableStateFlow("")
 
-    val _document = MutableLiveData<IGeminiDocument>()
-    val document: LiveData<IGeminiDocument> = _document
+    val document: StateFlow<IGeminiDocument>
+        field = MutableStateFlow<IGeminiDocument>(EmptyGeminiDocument)
 
-    suspend fun load(id: Long) = withContext(Dispatcher) {
-        if (_tab.value?.id == id) {
-            return@withContext
-        }
+    suspend fun load(tab: ScopedTab) = withContext(Dispatcher) {
+        this@BrowserPageViewModel.tab = tab
+        isInitialized = true
+        currentUrl.value = tab.currentLocation
 
-        val tab = ScopedTab(Tabs.get(id))
-        withContext(Dispatchers.Main) {
-            _tab.value = tab
-            _currentUrl.value = tab.currentLocation
-
-            when (tab.status) {
-                TabStatus.BLANK -> _document.value = EmptyGeminiDocument
-                TabStatus.VALID -> {
-                    try {
-                        _isLoading.value = true
-                        val document = withContext(Dispatcher) { tab.load(tab.currentLocation, false) }
-                        _document.value = document
-                    } finally {
-                        _isLoading.value = false
-                    }
+        when (tab.status) {
+            TabStatus.BLANK -> document.value = EmptyGeminiDocument
+            TabStatus.VALID -> {
+                try {
+                    isLoading.value = true
+                    val document = withContext(Dispatcher) { tab.load(tab.currentLocation, false) }
+                    this@BrowserPageViewModel.document.value = document
+                } finally {
+                    isLoading.value = false
                 }
-
-                TabStatus.INVALID -> _document.value = InvalidGeminiDocument
             }
+
+            TabStatus.INVALID -> document.value = InvalidGeminiDocument
         }
     }
 
     suspend fun start(address: String) {
         /* Whatever comes from here, act as if gemini:// was prepended to it */
-        _tab.value?.let {
-            if (address.startsWith("gemini://")) {
-                navigate(address, pushToHistory = true, isCheckCache = false)
-            } else {
-                navigate("gemini://$address", pushToHistory = true, isCheckCache = false)
-            }
+        if (address.startsWith("gemini://")) {
+            navigate(address, pushToHistory = true, isCheckCache = false)
+        } else {
+            navigate("gemini://$address", pushToHistory = true, isCheckCache = false)
         }
     }
 
     suspend fun back() = withContext(Dispatcher) {
-        _tab.value?.let {
-            try {
-                _document.postValue(it.load(it.back(), true))
-            } finally {
-                _currentUrl.postValue(it.currentLocation)
-            }
+        try {
+            document.value = tab.load(tab.back(), true)
+        } finally {
+            currentUrl.value = tab.currentLocation
         }
     }
 
     suspend fun forward() = withContext(Dispatcher) {
-        _tab.value?.let {
-            try {
-                _document.postValue(it.load(it.forward(), true))
-            } finally {
-                _currentUrl.postValue(it.currentLocation)
-            }
+        try {
+            document.value = tab.load(tab.forward(), true)
+        } finally {
+            currentUrl.value = tab.currentLocation
         }
     }
 
     suspend fun input(query: String) {
-        _tab.value?.let {
-            val uri = GeminiHost.appendArgs(it.currentLocation, query)
-            navigate(uri, pushToHistory = true, isCheckCache = true)
-        }
+        val uri = GeminiHost.appendArgs(tab.currentLocation, query)
+        navigate(uri, pushToHistory = true, isCheckCache = true)
     }
 
     suspend fun navigate(
         address: String, pushToHistory: Boolean = true, isCheckCache: Boolean = true
     ) = withContext(Dispatcher) {
-        _tab.value?.let {
-            try {
-                _isLoading.postValue(true)
-                _document.postValue(it.navigate(address, pushToHistory, isCheckCache))
-            } finally {
-                _currentUrl.postValue(it.currentLocation)
-                _isLoading.postValue(false)
-            }
+        try {
+            isLoading.value = true
+            document.value = tab.navigate(address, pushToHistory, isCheckCache)
+        } finally {
+            currentUrl.value = tab.currentLocation
+            isLoading.value = false
         }
     }
 

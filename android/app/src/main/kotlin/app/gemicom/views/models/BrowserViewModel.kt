@@ -1,12 +1,12 @@
 package app.gemicom.views.models
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.gemicom.models.*
+import app.gemicom.models.AppSettings
+import app.gemicom.models.ITabs
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.kodein.di.conf.DIGlobalAware
@@ -17,22 +17,28 @@ class BrowserViewModel : ViewModel(), DIGlobalAware {
     private val AppSettings: AppSettings by instance()
     private val Dispatcher: CoroutineDispatcher by instance()
 
-    private val _tabs = MutableLiveData<List<ScopedTab>>()
-    val tabs: LiveData<List<ScopedTab>> = _tabs
+    val tabs: StateFlow<List<ScopedTab>>
+        field = MutableStateFlow(listOf())
 
-    private val _currentTab: MutableLiveData<ScopedTab> = MutableLiveData()
-    val currentTab: LiveData<ScopedTab> = _currentTab
+    val selectedTab: StateFlow<Int>
+        field = MutableStateFlow(0)
 
-    val hasClipboardContent = MutableLiveData(false)
+    val currentTab: StateFlow<ScopedTab?> = combine(tabs, selectedTab) { list, index ->
+        list.getOrNull(index)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = tabs.value.getOrNull(selectedTab.value)
+    )
+
+    val hasClipboardContent = MutableStateFlow(false)
 
     val initialization: Job = viewModelScope.launch(Dispatcher) {
         val tabs = Tabs.all()
 
         if (tabs.isNotEmpty()) {
-            val lastTabId = AppSettings.selectedTab ?: tabs.last().id
-            val lastTab = tabs.first { it.id == lastTabId }
-            _tabs.postValue(tabs.map { ScopedTab(it) })
-            _currentTab.postValue(ScopedTab(lastTab))
+            this@BrowserViewModel.tabs.value = tabs.map { ScopedTab(it) }
+            selectedTab.value = AppSettings.selectedTab
         } else {
             restart()
         }
@@ -40,50 +46,34 @@ class BrowserViewModel : ViewModel(), DIGlobalAware {
 
     suspend fun new() = withContext(Dispatcher) {
         val tab = Tabs.new()
-        val newTabs = _tabs.value.orEmpty().toMutableList()
+        val newTabs = tabs.value.toMutableList()
         newTabs.add(ScopedTab(tab))
-        _tabs.postValue(newTabs)
+        tabs.value = newTabs
     }
 
     suspend fun close(position: Int) = withContext(Dispatcher) {
-        val tabs = _tabs.value ?: return@withContext
-        val closingTab = tabs[position]
+        val closingTab = tabs.value[position]
         closingTab.close()
-        val updatedTabs = tabs.toMutableList()
+        val updatedTabs = tabs.value.toMutableList()
         updatedTabs.remove(closingTab)
         Tabs.delete(closingTab.id)
-        _tabs.postValue(updatedTabs)
+        tabs.value = updatedTabs
     }
 
     suspend fun select(position: Int) = withContext(Dispatcher) {
-        val tabs = _tabs.value ?: return@withContext
-        val selectedTab = tabs[position]
-
-        /** @since 2025-06-06 If current tab is selected, no need to do anything */
-        if (selectedTab.id == _currentTab.value?.id) {
-            return@withContext
-        }
-
-        AppSettings.selectedTab = selectedTab.id
-        _currentTab.postValue(selectedTab)
+        AppSettings.selectedTab = position
+        selectedTab.value = position
     }
 
     suspend fun restart() = withContext(Dispatcher) {
         val tab = ScopedTab(Tabs.new())
-        _tabs.postValue(listOf(tab))
-        _currentTab.postValue(tab)
+        tabs.value = listOf(tab)
+        select(0)
     }
 
     suspend fun reset() = withContext(Dispatcher) {
-        _tabs.value.orEmpty().forEach { it.close() }
+        tabs.value.forEach { it.close() }
         Tabs.clear()
-        val tab = ScopedTab(Tabs.new())
-        _tabs.postValue(listOf(tab))
-        _currentTab.postValue(tab)
-    }
-
-    suspend fun reload() = withContext(Dispatcher) {
-        val tabs = Tabs.all().map { ScopedTab(it) }
-        _tabs.postValue(tabs)
+        restart()
     }
 }

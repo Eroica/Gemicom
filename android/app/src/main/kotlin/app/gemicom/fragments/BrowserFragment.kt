@@ -3,22 +3,26 @@ package app.gemicom.fragments
 import android.content.ClipboardManager
 import android.content.Context.CLIPBOARD_SERVICE
 import android.os.Bundle
-import android.view.*
+import android.view.View
+import android.view.ViewGroup
 import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
-import app.gemicom.*
+import app.gemicom.R
 import app.gemicom.models.ITab
-import app.gemicom.platform.*
+import app.gemicom.platform.ViewRefs
+import app.gemicom.platform.addListener
 import app.gemicom.views.models.BrowserViewModel
-import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import org.kodein.di.conf.DIGlobalAware
 
 class BrowserPageAdapter(
@@ -83,7 +87,7 @@ class BrowserFragment : Fragment(R.layout.fragment_browser), ITabListener, DIGlo
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.initialization.join()
-            viewPager().adapter = BrowserPageAdapter(this@BrowserFragment, viewModel.tabs.value ?: emptyList())
+            viewPager().adapter = BrowserPageAdapter(this@BrowserFragment, viewModel.tabs.value)
             setupListeners()
             setupObservers()
         }
@@ -101,7 +105,7 @@ class BrowserFragment : Fragment(R.layout.fragment_browser), ITabListener, DIGlo
 
     override fun onTabClosed(position: Int) {
         viewLifecycleOwner.lifecycleScope.launch {
-            val currentSize = viewModel.tabs.value?.size ?: return@launch
+            val currentSize = viewModel.tabs.value.size
             viewModel.close(position)
 
             if (currentSize == 1) {
@@ -114,7 +118,7 @@ class BrowserFragment : Fragment(R.layout.fragment_browser), ITabListener, DIGlo
     }
 
     override fun onNewTab() {
-        val currentSize = viewModel.tabs.value?.size ?: 0
+        val currentSize = viewModel.tabs.value.size
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.new()
             viewPager().adapter?.notifyItemInserted(currentSize + 1)
@@ -141,19 +145,25 @@ class BrowserFragment : Fragment(R.layout.fragment_browser), ITabListener, DIGlo
             .applicationContext
             .getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.addListener()
-            .onEach { viewModel.hasClipboardContent.postValue(true) }
+            .onEach { viewModel.hasClipboardContent.value = true }
             .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
-    private fun setupObservers() {
-        viewModel.tabs.observe(viewLifecycleOwner) {
-            (viewPager().adapter as BrowserPageAdapter).submitList(it)
-        }
-        /** @since 2025-12-06 Bug fix for state restoration: Tab must be searched for by ID. */
-        viewModel.currentTab.observe(viewLifecycleOwner) { currentTab ->
-            val index = viewModel.tabs.value?.indexOfFirst { it.id == currentTab.id } ?: -1
-            if (index != -1) {
-                viewPager().setCurrentItem(index, false)
+    private suspend fun setupObservers() {
+        viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            launch {
+                viewModel.tabs.collect {
+                    (viewPager().adapter as BrowserPageAdapter).submitList(it)
+                }
+            }
+            launch {
+                /** @since 2025-12-06 Bug fix for state restoration: Tab must be searched for by ID. */
+                viewModel.currentTab.collect { currentTab ->
+                    val index = viewModel.tabs.value.indexOfFirst { it.id == currentTab?.id }
+                    if (index != -1) {
+                        viewPager().setCurrentItem(index, false)
+                    }
+                }
             }
         }
     }
