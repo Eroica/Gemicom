@@ -24,26 +24,11 @@ interface IDb : AutoCloseable {
         sql: String, setParams: (PreparedStatement) -> Unit = {}, handle: (ResultSet) -> T
     ): T
 
-    fun <T> query(
-        sql: Sql, setParams: (PreparedStatement) -> Unit = {}, handle: (ResultSet) -> T
-    ): T {
-        return query(Sql(sql), setParams, handle)
-    }
-
     fun update(sql: String, setParams: (PreparedStatement) -> Unit = {})
-    fun update(sql: Sql, setParams: (PreparedStatement) -> Unit = {}) {
-        update(Sql(sql), setParams)
-    }
 
     fun <T> update(
         sql: String, setParams: (PreparedStatement) -> Unit = {}, handle: (ResultSet) -> T
     ): T
-
-    fun <T> update(
-        sql: Sql, setParams: (PreparedStatement) -> Unit = {}, handle: (ResultSet) -> T
-    ): T {
-        return update(Sql(sql), setParams, handle)
-    }
 
     fun transaction(block: () -> Unit)
 }
@@ -142,18 +127,18 @@ class Db private constructor(uri: String) : IDb {
     }
 
     private fun initialize() {
-        update(ENVIRONMENT)
-        update(DOCUMENT)
-        update(TABS)
-        update(CACHE)
-        update(CERTIFICATE)
+        update(Sql.ENVIRONMENT)
+        update(Sql.DOCUMENT)
+        update(Sql.TABS)
+        update(Sql.CACHE)
+        update(Sql.CERTIFICATE)
         update("""INSERT INTO environment (name, value) VALUES ('AppSettings', '{"home": ""}')""")
         connection.setVersion(DB_CURRENT_VERSION)
     }
 
     private fun migrateTo2() {
         update("""DROP TABLE document""")
-        update(DOCUMENT)
+        update(Sql.DOCUMENT)
         connection.setVersion(2)
     }
 }
