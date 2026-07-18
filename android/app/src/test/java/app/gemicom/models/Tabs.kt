@@ -45,14 +45,13 @@ internal class TabsTest {
     @Test
     fun `Test initial navigate`() {
         val tab = tabs.new()
-        assertEquals("gemini://gemicom.app/", tab.start("gemini://gemicom.app"))
+        assertEquals("gemini://gemicom.app/", tab.navigate("gemicom.app"))
     }
 
     @Test
     fun `Test creating history`() {
         val tab = tabs.new()
-        tab.start("gemini://gemicom.app")
-
+        tab.navigate("gemini://gemicom.app")
         tab.navigate("/example")
         tab.navigate("image")
         tab.navigate("/image/nested")
@@ -71,7 +70,7 @@ internal class TabsTest {
     @Test
     fun `Test create history once`() {
         val tab = tabs.new()
-        tab.start("gemicom.app")
+        tab.navigate("gemicom.app")
         tab.navigate(tab.resolve("/example2"))
         assertEquals(2, tab.history.size)
     }
@@ -132,7 +131,7 @@ internal class TabsTest {
     @Test
     fun `Test start with hostname`() {
         val tab1 = tabs.new()
-        tab1.start("localhost")
+        tab1.navigate("localhost")
 
         assertEquals("gemini://localhost/", tab1.currentLocation)
 

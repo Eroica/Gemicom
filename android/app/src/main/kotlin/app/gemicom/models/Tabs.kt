@@ -36,7 +36,6 @@ interface ITab {
     fun back(): String
     fun forward(): String
 
-    fun start(address: String): String
     fun navigate(address: String, pushToHistory: Boolean = true): String
     fun resolve(reference: String): String
 
@@ -135,13 +134,6 @@ class SqlTab(
         return geminiHost?.resolve(reference) ?: ""
     }
 
-    override fun start(address: String): String {
-        geminiHost = GeminiHost.fromAddress(address)
-        addToHistory(currentLocation)
-
-        return currentLocation
-    }
-
     override fun navigate(address: String, pushToHistory: Boolean): String {
         try {
             val locationBeforeNavigate = currentLocation
@@ -153,7 +145,10 @@ class SqlTab(
 
             return currentLocation
         } catch (_: NullPointerException) {
-            return start(address)
+            geminiHost = GeminiHost.fromAddress(address)
+            addToHistory(currentLocation)
+
+            return currentLocation
         }
     }
 
