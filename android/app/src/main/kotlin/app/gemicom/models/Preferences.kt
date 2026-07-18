@@ -92,10 +92,10 @@ class AppSettings(private val prefs: IPreferences) {
             prefs["isShowImagesInline"] = if (value) "1" else "0"
         }
 
-    var selectedTab: Long?
-        get() = prefs["selectedTab"]?.toLong()
+    var selectedTab: Int
+        get() = prefs["selectedTab"]?.toInt() ?: 0
         set(value) {
-            prefs["selectedTab"] = value?.toString()
+            prefs["selectedTab"] = value.toString()
         }
 
     var isDebug: Boolean

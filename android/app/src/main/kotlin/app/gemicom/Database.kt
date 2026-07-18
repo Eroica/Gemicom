@@ -132,7 +132,7 @@ class Db private constructor(uri: String) : IDb {
         update(Sql.TABS)
         update(Sql.CACHE)
         update(Sql.CERTIFICATE)
-        update("""INSERT INTO environment (name, value) VALUES ('AppSettings', '{"home": ""}')""")
+        update("""INSERT INTO environment (name, value) VALUES ('AppSettings', '{"home": "", "selectedTab": "0"}')""")
         connection.setVersion(DB_CURRENT_VERSION)
     }
 
